@@ -1,0 +1,120 @@
+<view class="page">
+  <view class="h1">分红覆盖</view>
+
+  <view wx:if="{{loading}}" class="card mt24 empty">
+    <view class="empty-emoji">🌱</view>
+    <view class="empty-title">正在统计覆盖进度…</view>
+  </view>
+
+  <block wx:else>
+
+  <!-- 概览 -->
+  <view class="dark-card mt24">
+    <!-- 右上角装饰弧：以卡片右上圆角为圆心的大圆，卡片 overflow:hidden 后只露出内接的一段弧 -->
+    <view class="set-arc"></view>
+    <!-- 齿轮设置入口：位置与原 64rpx 圆完全一致，只是底色改由上面的弧提供 -->
+    <view class="set-btn" bindtap="goExpenseSettings">
+      <view class="ico-gear"></view>
+    </view>
+    <view class="small dim-on-dark">分红已覆盖</view>
+    <view class="cover-num">{{coveredCount}}<text class="cover-unit">项支出</text></view>
+    <view class="divider-dark"></view>
+    <view class="row">
+      <view class="col flex1">
+        <text class="tiny dim-on-dark">固定支出总额</text>
+        <text class="mid mt8 num">{{totalYearText}}</text>
+      </view>
+      <view class="col flex1">
+        <text class="tiny dim-on-dark">预测年度分红</text>
+        <text class="mid mt8 num">{{dividendText}}</text>
+      </view>
+      <view class="col flex1" style="align-items: flex-end">
+        <text class="tiny dim-on-dark">今年已实现</text>
+        <text class="mid mt8 num">{{receivedText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 成长之路 -->
+  <view class="card mt24">
+    <view class="between">
+      <view class="row">
+        <view class="icon-box icon-soft-green">🌱</view>
+        <view class="h3 ml12">成长之路</view>
+      </view>
+      <text class="h3 c-primary">{{stageName}}</text>
+    </view>
+
+    <view class="stage-wrap">
+      <view class="stage-line">
+        <!-- 进度宽度走 CSS 变量：内联 width 里夹着 {{}} 会被 IDE 的 CSS 校验误报 -->
+        <view class="stage-line-in" style="--w: {{stageLine}}%"></view>
+      </view>
+      <view class="stage-dots">
+        <view wx:for="{{stages}}" wx:key="name" class="stage-item">
+          <view class="stage-dot {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}"></view>
+          <text class="stage-name {{item.done ? 'done' : ''}} {{item.current ? 'current' : ''}}">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="small dim mt16">
+      再覆盖 {{needCount}} 项即达成 ✦ 进入佳境，还需 {{needGapText}} 分红
+    </view>
+
+    <!-- 下一个目标 -->
+    <view wx:if="{{next}}" class="next-box">
+      <view class="between">
+        <text class="mid bold">{{next.icon}} {{next.name}} · {{next.yearText}}/年</text>
+        <text class="tiny c-orange">{{next.progress}}%</text>
+      </view>
+      <view class="pbar mt16">
+        <view class="pbar-in" style="--w: {{next.progress}}%"></view>
+      </view>
+      <view class="tiny dim mt12">{{next.note}}</view>
+    </view>
+  </view>
+
+  <!-- 支出清单 -->
+  <view class="card mt24">
+    <view
+      wx:for="{{list}}"
+      wx:key="id"
+      class="cov-row"
+    >
+      <view class="between">
+        <view class="row">
+          <text class="cov-emoji">{{item.icon}}</text>
+          <text class="mid bold ml12">{{item.name}}</text>
+          <text class="tag {{item.tagClass}} ml12">{{item.tagText}}</text>
+        </view>
+        <view class="row">
+          <text class="tiny dim">{{item.yearText}}/年</text>
+          <text wx:if="{{item.locked}}" class="lock ml8">🔒</text>
+        </view>
+      </view>
+      <view class="pbar mt16">
+        <view class="pbar-in {{item.done ? 'green' : ''}}" style="--w: {{item.progress}}%"></view>
+      </view>
+      <view class="tiny dim mt12">{{item.note}}</view>
+    </view>
+  </view>
+
+  <!-- 成长日志 -->
+  <view class="card mt24">
+    <view class="row">
+      <view class="icon-box icon-soft-gold">📖</view>
+      <view class="h3 ml12">成长日志</view>
+    </view>
+    <view wx:if="{{logs.length}}" class="mt20">
+      <view wx:for="{{logs}}" wx:key="id" class="log-row">
+        <text class="log-date">{{item.date}}</text>
+        <text class="small flex1 ml16">{{item.text}} {{item.target}}</text>
+        <text wx:if="{{item.badge}}" class="tag {{item.badgeClass}}">{{item.badge}}</text>
+      </view>
+    </view>
+
+    <view wx:else class="log-empty">还没有点亮任何支出，先从最容易的一项开始吧</view>
+  </view>
+  </block>
+</view>

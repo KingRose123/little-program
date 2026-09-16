@@ -1,0 +1,28 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">📄</view>
+    <view class="empty-title">正在加载…</view>
+  </view>
+
+  <block wx:else>
+    <!-- 说明型：键值对列表 -->
+    <view wx:if="{{isTable}}" class="card-flat">
+      <view wx:for="{{rows}}" wx:key="name" class="doc-row">
+        <view class="doc-label">{{item.name || item.label}}</view>
+        <view class="doc-value">{{item.desc || item.value}}</view>
+      </view>
+    </view>
+
+    <!-- 法律文本：段落排版 -->
+    <block wx:else>
+      <view class="card">
+        <view class="doc-title">{{title}}</view>
+        <view class="tiny dim mt8">更新日期 {{updated}}</view>
+        <view wx:for="{{paras}}" wx:key="*this" class="doc-p">{{item}}</view>
+      </view>
+      <view class="doc-foot">以上内容为应用内的完整说明文本，如有疑问可通过「联系我们」反馈。</view>
+    </block>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>

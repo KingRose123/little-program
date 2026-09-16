@@ -1,0 +1,289 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">🧮</view>
+    <view class="empty-title">正在加载…</view>
+  </view>
+
+  <block wx:else>
+    <!-- ============ t1 复利计算器 ============ -->
+    <block wx:if="{{kind === 't1'}}">
+      <view class="card hero">
+        <view class="hero-label">{{cp.years}} 年后可达</view>
+        <view class="hero-num num">{{compound.finalText}}</view>
+        <view class="hero-sub">
+          累计投入 {{compound.investedText}} · 累计收益 {{compound.gainText}}
+        </view>
+
+        <view class="hero-tags">
+          <view class="htag">
+            <text class="htag-v num">{{compound.multipleText}}</text>
+            <text class="htag-l">投入产出比（倍）</text>
+          </view>
+          <view class="htag">
+            <text class="htag-v num">{{compound.rateText}}%</text>
+            <text class="htag-l">总收益率</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="sec-head">
+        <text class="h3">调整参数</text>
+        <text class="tiny dim ml12">拖动即时重算</text>
+      </view>
+
+      <view class="card-flat">
+        <view class="sl-row">
+          <view class="between">
+            <text class="sl-name">初始本金</text>
+            <text class="sl-val num">{{compound.principalText}}</text>
+          </view>
+          <slider
+            min="10000"
+            max="1000000"
+            step="10000"
+            value="{{cp.principal}}"
+            activeColor="#1F9D6B"
+            backgroundColor="#EFF2F1"
+            block-size="22"
+            data-field="principal"
+            bindchanging="onCpSlide"
+            bindchange="onCpSlide"
+          />
+        </view>
+
+        <view class="sl-row">
+          <view class="between">
+            <text class="sl-name">每月定投</text>
+            <text class="sl-val num">{{compound.monthlyText}}</text>
+          </view>
+          <slider
+            min="0"
+            max="20000"
+            step="500"
+            value="{{cp.monthly}}"
+            activeColor="#1F9D6B"
+            backgroundColor="#EFF2F1"
+            block-size="22"
+            data-field="monthly"
+            bindchanging="onCpSlide"
+            bindchange="onCpSlide"
+          />
+          <view class="quick">
+            <text
+              wx:for="{{[0, 3000, 5000, 10000]}}"
+              wx:key="*this"
+              class="quick-btn {{cp.monthly === item ? 'on' : ''}}"
+              data-monthly="{{item}}"
+              bindtap="onPreset"
+            >{{item === 0 ? '不定投' : item}}</text>
+          </view>
+        </view>
+
+        <view class="sl-row">
+          <view class="between">
+            <text class="sl-name">预期年化</text>
+            <text class="sl-val num">{{cpText.rate}}%</text>
+          </view>
+          <slider
+            min="1"
+            max="15"
+            step="0.5"
+            value="{{cp.rate}}"
+            activeColor="#1F9D6B"
+            backgroundColor="#EFF2F1"
+            block-size="22"
+            data-field="rate"
+            bindchanging="onCpSlide"
+            bindchange="onCpSlide"
+          />
+        </view>
+
+        <view class="sl-row">
+          <view class="between">
+            <text class="sl-name">持有年限</text>
+            <text class="sl-val num">{{cpText.years}} 年</text>
+          </view>
+          <slider
+            min="1"
+            max="40"
+            step="1"
+            value="{{cp.years}}"
+            activeColor="#1F9D6B"
+            backgroundColor="#EFF2F1"
+            block-size="22"
+            data-field="years"
+            bindchanging="onCpSlide"
+            bindchange="onCpSlide"
+          />
+        </view>
+      </view>
+
+      <view class="sec-head"><text class="h3">增长曲线</text></view>
+
+      <view class="card">
+        <view class="curve">
+          <view wx:for="{{compound.curve}}" wx:key="label" class="curve-col">
+            <text class="curve-val num">{{item.valueText}}</text>
+            <view class="curve-bar-wrap">
+              <view class="curve-bar" style="--h: {{item.height}}%"></view>
+            </view>
+            <text class="curve-label">{{item.label}}</text>
+          </view>
+        </view>
+        <view class="curve-note">按月复利、月投在月末投入，分红全部再投入。</view>
+      </view>
+    </block>
+
+    <!-- ============ t3 息率对比 ============ -->
+    <block wx:elif="{{kind === 't3'}}">
+      <view class="tip">📊 {{compare.note}}</view>
+
+      <view class="card-flat">
+        <view
+          wx:for="{{compare.list}}"
+          wx:key="code"
+          class="cmp-row"
+          data-code="{{item.code}}"
+          data-market="{{item.market}}"
+          bindtap="onAdd"
+        >
+          <view class="cmp-no {{item.rank <= 3 ? 'top' : ''}}">{{item.rank}}</view>
+
+          <view class="flex1 cmp-body">
+            <view class="row">
+              <text class="mid bold">{{item.name}}</text>
+              <text class="tag {{item.cls}} ml8">{{item.marketLabel}}</text>
+            </view>
+            <view class="tiny dim mt8">{{item.code}}</view>
+            <view class="bar">
+              <view class="bar-in" style="--w: {{item.width}}%"></view>
+            </view>
+          </view>
+
+          <text class="cmp-val num">{{item.valueText}}%</text>
+        </view>
+      </view>
+
+      <view class="foot-tip">点任一条可直接加入持仓。息率按最新价与上一年度真实派息实时计算。</view>
+    </block>
+
+    <!-- ============ t4 定投回测 ============ -->
+    <block wx:else>
+      <!-- 行情没取到时 previewDca 返回 null，给一个明确的重试态 -->
+      <view wx:if="{{!dca}}" class="card empty">
+        <view class="empty-emoji">📉</view>
+        <view class="empty-title">行情获取失败，请退出后重进</view>
+      </view>
+
+      <block wx:else>
+      <view class="sec-head">
+        <text class="h3">选择标的</text>
+        <text class="tiny dim ml12">横向可滑</text>
+      </view>
+
+      <scroll-view class="pool" scroll-x enable-flex>
+        <view
+          wx:for="{{dca.pool}}"
+          wx:key="code"
+          class="pool-item {{dcaParams.code === item.code ? 'on' : ''}}"
+          data-code="{{item.code}}"
+          bindtap="onPickStock"
+        >
+          <view class="pool-name">{{item.name}}</view>
+          <view class="pool-yield num">{{item.valueText}}%</view>
+        </view>
+      </scroll-view>
+
+      <view class="card hero">
+        <view class="hero-label">{{dca.name}} · 定投 {{dca.years}} 年</view>
+        <view class="hero-num num">{{dca.valueText}}</view>
+        <view class="hero-sub">
+          累计投入 {{dca.investedText}} · 分红再投入 {{dca.dividendText}}
+        </view>
+
+        <view class="hero-tags">
+          <view class="htag">
+            <text class="htag-v num">{{dca.gainRateText}}%</text>
+            <text class="htag-l">累计收益率</text>
+          </view>
+          <view class="htag">
+            <text class="htag-v num">{{dca.annualText}}%</text>
+            <text class="htag-l">年化收益率</text>
+          </view>
+          <view class="htag">
+            <text class="htag-v num">{{dca.sharesText}}</text>
+            <text class="htag-l">期末份额</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="sec-head"><text class="h3">调整参数</text></view>
+
+      <view class="card-flat">
+        <view class="sl-row">
+          <view class="between">
+            <text class="sl-name">每月定投</text>
+            <text class="sl-val num">{{dca.monthlyText}}</text>
+          </view>
+          <slider
+            min="500"
+            max="20000"
+            step="500"
+            value="{{dcaParams.monthly}}"
+            activeColor="#1F9D6B"
+            backgroundColor="#EFF2F1"
+            block-size="22"
+            data-field="monthly"
+            bindchanging="onDcaSlide"
+            bindchange="onDcaSlide"
+          />
+        </view>
+
+        <view class="sl-row">
+          <view class="between">
+            <text class="sl-name">定投年限</text>
+            <text class="sl-val num">{{dcaParams.years}} 年</text>
+          </view>
+          <slider
+            min="1"
+            max="30"
+            step="1"
+            value="{{dcaParams.years}}"
+            activeColor="#1F9D6B"
+            backgroundColor="#EFF2F1"
+            block-size="22"
+            data-field="years"
+            bindchanging="onDcaSlide"
+            bindchange="onDcaSlide"
+          />
+        </view>
+
+        <view class="param-note">
+          按该标的的税后股价息率 {{dca.yieldText}} 逐年分红并再投入，股价按年化 {{dca.priceGrowth}}% 增长推演。
+        </view>
+      </view>
+
+      <view class="sec-head"><text class="h3">逐年明细</text></view>
+
+      <view class="card-flat">
+        <view class="dca-head">
+          <text class="dca-c1">年度</text>
+          <text class="dca-c2">累计投入</text>
+          <text class="dca-c3">期末市值</text>
+          <text class="dca-c4">累计分红</text>
+        </view>
+        <view wx:for="{{dca.rows}}" wx:key="year" class="dca-row">
+          <text class="dca-c1">{{item.label}}</text>
+          <text class="dca-c2 num">{{item.investedText}}</text>
+          <text class="dca-c3 num">{{item.valueText}}</text>
+          <text class="dca-c4 num up">{{item.dividendText}}</text>
+        </view>
+      </view>
+
+      <view class="foot-tip">回测为简化模型：假设分红政策稳定、无税费差异与汇率波动，结果仅供横向比较参考。</view>
+      </block>
+    </block>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>

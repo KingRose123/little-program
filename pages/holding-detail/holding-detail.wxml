@@ -1,0 +1,273 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">
+    <view class="empty-emoji">📄</view>
+    <view class="empty-title">正在加载持仓详情…</view>
+  </view>
+
+  <block wx:else>
+  <!-- 币种提示：显示货币与该持仓本币不一致时才出现 -->
+  <view wx:if="{{h.showCurrencyTip && showCurrency}}" class="warm-tip cur-tip" bindtap="switchCurrency">
+    <text class="flex1">💱 当前按{{h.currencyName}}显示</text>
+    <text class="cur-link">换成{{h.nativeCurrencyName}}看 →</text>
+  </view>
+
+  <!-- 标题 -->
+  <view class="title-row">
+    <text class="code">{{h.code}}</text>
+    <text class="h1 ml12">{{h.name}}</text>
+    <text class="tag {{h.tagClass}} ml12">{{h.marketTag}}</text>
+  </view>
+  <view class="small dim mt8">{{h.marketLabel}}</view>
+
+  <!-- 预测分红 -->
+  <view class="card mt24">
+    <view class="between">
+      <text class="small dim">预测年分红（税后）</text>
+      <text class="tiny dim" bindtap="onExplain">觉得不准？ ›</text>
+    </view>
+    <view class="huge c-orange num mt12">{{h.dividendText}}</view>
+    <view class="tiny dim mt8">每股 {{h.dpsText}} × {{h.sharesText}}</view>
+  </view>
+
+  <!-- 市值 -->
+  <view class="card mt20">
+    <view class="between">
+      <view class="col">
+        <text class="small dim">当前市值</text>
+        <text class="h2 num mt8">{{h.marketValueText}}</text>
+      </view>
+      <view class="col" style="align-items: flex-end">
+        <text class="tiny dim">{{h.priceDateText}}</text>
+        <text class="mid num mt8">{{h.priceText}} × {{h.sharesText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 持股天数 -->
+  <view class="card mt20 between">
+    <text class="small dim">🔥 持股天数 ⓘ</text>
+    <text class="h3">{{h.holdingDays}}天</text>
+  </view>
+
+  <!-- 指标 2x2 -->
+  <view class="grid">
+    <view class="grid-cell">
+      <text class="tiny dim">成本息率（税后）ⓘ</text>
+      <text class="h3 num mt12">{{h.costYieldText}}</text>
+      <text class="tiny dim mt8">成本 {{h.costText}}</text>
+    </view>
+    <view class="grid-cell">
+      <text class="tiny dim">股价息率（税后）ⓘ</text>
+      <text class="h3 num mt12">{{h.priceYieldText}}</text>
+      <text class="tiny dim mt8">基于{{h.priceDateText}} {{h.priceText}}</text>
+    </view>
+    <view class="grid-cell">
+      <text class="tiny dim">持仓数量</text>
+      <text class="h3 num mt12">{{h.sharesText}}</text>
+      <text class="tiny dim mt8">—</text>
+    </view>
+    <view class="grid-cell">
+      <text class="tiny dim">当前成本 ⓘ</text>
+      <text class="h3 num mt12">{{h.costText}}</text>
+      <view class="mt8"><text class="tag {{h.received > 0 ? 'tag-green' : 'tag-gray'}}">{{h.received > 0 ? '分红摊薄' : '未摊薄'}}</text></view>
+    </view>
+  </view>
+
+  <!-- 累计已获分红 -->
+  <view class="card mt20 between">
+    <text class="small dim">累计已获分红</text>
+    <text class="h3 c-orange num">{{h.receivedText}}</text>
+  </view>
+
+  <!-- 分红税率：按实际开户方式逐只可配，关掉扣税开关就不展示 -->
+  <view wx:if="{{h.taxOn && h.taxRate > 0}}" class="card mt20 between">
+    <text class="small dim">分红税率 ⓘ</text>
+    <text class="h3">{{h.taxRate}}%</text>
+  </view>
+
+  <!-- 回本进度 -->
+  <view class="card mt20">
+    <view class="between">
+      <text class="small dim">分红回本进度 ⓘ</text>
+      <text class="h3 c-orange num">{{h.paybackProgress}}%</text>
+    </view>
+    <view class="pbar mt20">
+      <view class="pbar-in" style="--w: {{h.paybackProgress}}%"></view>
+    </view>
+    <view class="row mt24">
+      <view class="col flex1">
+        <text class="tiny dim">净投入</text>
+        <text class="mid num mt8">{{h.netInvestText}}</text>
+      </view>
+      <view class="col flex1">
+        <text class="tiny dim">已收分红</text>
+        <text class="mid num mt8">{{h.receivedText}}</text>
+      </view>
+      <view class="col flex1">
+        <text class="tiny dim">剩余待回收</text>
+        <text class="mid num mt8">{{h.remainingText}}</text>
+      </view>
+      <view class="col flex1" style="align-items: flex-end">
+        <text class="tiny dim">预计回本（税后）</text>
+        <text class="mid num mt8">{{h.paybackYearsText}}年</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="card-flat mt24">
+    <view
+      wx:for="{{menus}}"
+      wx:key="key"
+      class="menu-row"
+      data-key="{{item.key}}"
+      bindtap="onMenu"
+    >
+      <view class="icon-box {{item.danger ? 'icon-soft-gray' : 'icon-soft-gray'}}">{{item.icon}}</view>
+      <view class="flex1 ml16">
+        <view class="mid {{item.danger ? 'c-up bold' : 'bold'}}">{{item.name}}</view>
+        <view class="tiny dim mt8">{{item.desc}}</view>
+      </view>
+      <view
+        wx:if="{{item.action}}"
+        class="btn-mini-dark"
+        data-key="{{item.key}}"
+        catchtap="onMenuAdd"
+      >＋ {{item.action}}</view>
+      <text wx:else class="dim">›</text>
+    </view>
+  </view>
+
+  <!-- 编辑持仓：常驻 DOM，靠 class 切换弹出动画 -->
+  <view class="sheet-mask {{editOpen ? 'show' : ''}}" bindtap="closeEdit"></view>
+  <view class="sheet {{editOpen ? 'open' : ''}}">
+    <view class="sheet-title">编辑持仓</view>
+
+    <view class="f-row">
+      <text class="f-label">持仓数量</text>
+      <input
+        class="f-input"
+        type="digit"
+        placeholder="股数"
+        placeholder-class="ph"
+        value="{{form.shares}}"
+        data-field="shares"
+        bindinput="onFormInput"
+      />
+      <text class="f-unit">股</text>
+    </view>
+
+    <view class="f-row">
+      <text class="f-label">当前成本</text>
+      <input
+        class="f-input"
+        type="digit"
+        placeholder="每股成本，可为负"
+        placeholder-class="ph"
+        value="{{form.cost}}"
+        data-field="cost"
+        bindinput="onFormInput"
+      />
+      <text class="f-unit">/股</text>
+    </view>
+
+    <view class="f-row f-col">
+      <text class="f-label">成本口径</text>
+      <view class="chips">
+        <view
+          wx:for="{{costModes}}"
+          wx:key="*this"
+          class="chip {{form.costModeIndex === index ? 'on' : ''}}"
+          data-i="{{index}}"
+          bindtap="onFormCostMode"
+        >{{item}}</view>
+      </view>
+    </view>
+
+    <view class="f-row">
+      <text class="f-label">买入日期</text>
+      <picker mode="date" value="{{form.buyDate}}" bindchange="onFormDate">
+        <view class="f-picker">{{form.buyDate || '请选择'}}</view>
+      </picker>
+    </view>
+
+    <view class="f-row">
+      <text class="f-label">交易费用</text>
+      <input
+        class="f-input"
+        type="digit"
+        placeholder="可选"
+        placeholder-class="ph"
+        value="{{form.fee}}"
+        data-field="fee"
+        bindinput="onFormInput"
+      />
+    </view>
+
+    <view class="f-row f-col">
+      <text class="f-label">分红预测口径</text>
+      <view class="chips">
+        <view
+          wx:for="{{divModes}}"
+          wx:key="*this"
+          class="chip {{form.divModeIndex === index ? 'on' : ''}}"
+          data-i="{{index}}"
+          bindtap="onFormDivMode"
+        >{{item}}</view>
+      </view>
+      <input
+        wx:if="{{form.divModeIndex === 3}}"
+        class="f-input mt20"
+        type="digit"
+        placeholder="请输入每股派息（元）"
+        placeholder-class="ph"
+        value="{{form.customDividend}}"
+        bindinput="onFormCustomDividend"
+      />
+      <view class="f-tip">ⓘ {{divTip}}</view>
+    </view>
+
+    <view class="f-row f-col">
+      <text class="f-label">分红税率</text>
+      <view class="chips">
+        <view
+          wx:for="{{taxOptions}}"
+          wx:key="text"
+          class="chip tax {{form.taxIndex === index ? 'on' : ''}}"
+          data-i="{{index}}"
+          bindtap="onFormTax"
+        >{{item.text}}</view>
+      </view>
+      <input
+        wx:if="{{form.taxCustom}}"
+        class="f-input mt20"
+        type="digit"
+        placeholder="请输入税率（%）"
+        placeholder-class="ph"
+        value="{{form.taxCustomRate}}"
+        bindinput="onFormTaxCustom"
+      />
+      <view class="f-tip">ⓘ {{taxTip}}</view>
+    </view>
+
+    <view class="f-row" bindtap="toggleFormTaxOn">
+      <text class="f-label">预测分红扣税</text>
+      <view class="flex1"></view>
+      <view class="switch tax {{form.taxOn ? 'on' : ''}}"><view class="switch-dot"></view></view>
+    </view>
+
+    <view class="f-row" bindtap="toggleFormNegative">
+      <text class="f-label">负成本</text>
+      <view class="flex1"></view>
+      <view class="switch {{form.negativeCost ? 'on' : ''}}"><view class="switch-dot"></view></view>
+    </view>
+
+    <view class="sheet-btn {{submitting ? 'off' : ''}}" bindtap="onSaveEdit">
+      {{submitting ? '保存中…' : '保存'}}
+    </view>
+    <view class="sheet-cancel" bindtap="closeEdit">取消</view>
+  </view>
+
+  <view class="bottom-space"></view>
+  </block>
+</view>

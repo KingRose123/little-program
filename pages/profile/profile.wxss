@@ -1,0 +1,244 @@
+.page-flat { padding-top: 24rpx; }
+
+.user-card { border-radius: 28rpx; }
+
+/* 未开通时会员卡右侧的引导按钮 */
+.member-cta {
+  margin-right: 8rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(240, 154, 60, 0.12);
+  color: var(--orange);
+  font-size: 22rpx;
+}
+
+.avatar {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.pro {
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #F0CB6A, #D9A93C);
+  color: #4A3506;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+}
+
+.pro-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diamond { color: #4C86C6; font-size: 24rpx; }
+
+/* ---------- 生活支出 ---------- */
+.exp-meta {
+  display: flex;
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+/* ---------- 列表 ---------- */
+.menu-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.menu-row:last-child { border-bottom: none; }
+.menu-row:active { background: #FAFBFB; }
+
+/* 未绑定手机号时整行可点去授权：透明按钮盖住整行
+   （只有 <button open-type="getPhoneNumber"> 能拉起微信手机号授权） */
+.menu-row.bindable { position: relative; }
+
+.row-bind {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+}
+
+.row-bind::after { border: 0; }
+
+/* ---------- 底部 ---------- */
+.logout {
+  text-align: center;
+  color: var(--up);
+  font-size: 30rpx;
+  font-weight: 500;
+  padding: 32rpx;
+}
+
+.logout:active { background: #FFF7F7; }
+
+.logout.off {
+  color: #C4C9CE;
+}
+
+.destroy {
+  margin-top: 32rpx;
+  text-align: center;
+  font-size: 25rpx;
+  color: var(--t3);
+}
+
+.icp {
+  margin-top: 28rpx;
+  text-align: center;
+  font-size: 21rpx;
+  color: #BFC5C2;
+}
+
+.bottom-space { height: 200rpx; }
+
+/* ---------- 底部面板（货币 / 账户 / 新增账户） ---------- */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 88;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 常驻 DOM，靠 class 切换拿到滑入动画 */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 89;
+  background: #FFFFFF;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 8rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.26s ease;
+}
+
+.sheet.open { transform: translateY(0); }
+
+.sheet-title {
+  padding: 30rpx 0 20rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.sheet-item {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+  border-top: 1rpx solid var(--line);
+  font-size: 28rpx;
+  color: var(--t1);
+}
+
+.sheet-item.on { color: var(--primary); font-weight: 600; }
+
+.sheet-tick { color: var(--primary); font-size: 28rpx; }
+
+.sheet-note {
+  margin-top: 16rpx;
+  padding: 18rpx 22rpx;
+  background: #F7F9F8;
+  border-radius: 14rpx;
+  font-size: 23rpx;
+  color: var(--t3);
+  line-height: 1.5;
+}
+
+.sheet-btn {
+  margin-top: 30rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  border-radius: 20rpx;
+  background: linear-gradient(90deg, #2FB57E, #1F9D6B);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.sheet-cancel {
+  margin-top: 16rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--t2);
+}
+
+/* ---------- 账户行 ---------- */
+.acc-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+.acc-radio {
+  width: 40rpx;
+  font-size: 30rpx;
+  color: var(--t3);
+  flex-shrink: 0;
+}
+
+.acc-row.on .acc-radio { color: var(--primary); }
+
+.acc-del {
+  padding: 8rpx 16rpx;
+  font-size: 24rpx;
+  color: var(--up);
+  flex-shrink: 0;
+}
+
+/* ---------- 表单行 ---------- */
+.f-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+.f-label {
+  width: 180rpx;
+  font-size: 27rpx;
+  color: var(--t2);
+  flex-shrink: 0;
+}
+
+.f-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: var(--t1);
+}
+
+.ph { color: #B9C0BC; }

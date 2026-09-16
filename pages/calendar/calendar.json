@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "login-guard": "/components/login-guard/login-guard"
+  },
+  "navigationBarTitleText": "收息佬"
+}

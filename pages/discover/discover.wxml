@@ -1,0 +1,122 @@
+<view class="page-flat">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">🔍</view>
+    <view class="empty-title">正在加载发现内容…</view>
+  </view>
+
+  <block wx:else>
+  <view class="head">
+    <view class="h1">发现</view>
+    <view class="small dim mt8">工具、榜单与分红知识，帮你把红利滚大</view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="search mt24" bindtap="onSearch">
+    <text class="search-icon">🔍</text>
+    <text class="search-ph">搜索股票代码 / 名称 / 分红方案</text>
+  </view>
+
+  <!-- 精选工具 -->
+  <view class="sec-title">精选工具</view>
+  <view class="tool-grid">
+    <view
+      wx:for="{{tools}}"
+      wx:key="id"
+      class="card tool-card"
+      data-id="{{item.id}}"
+      bindtap="onTool"
+    >
+      <view class="icon-box-lg {{item.bg}}">{{item.icon}}</view>
+      <view class="mid bold mt16">{{item.name}}</view>
+      <view class="tiny dim mt8">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <!-- 分红榜单 -->
+  <view class="sec-title">分红榜单</view>
+  <view class="card-flat">
+    <view
+      wx:for="{{ranks}}"
+      wx:key="id"
+      class="menu-row"
+      data-id="{{item.id}}"
+      bindtap="onRank"
+    >
+      <view class="icon-box icon-soft-gold">{{item.icon}}</view>
+      <view class="flex1 ml16">
+        <view class="row">
+          <text class="bold">{{item.name}}</text>
+          <text class="tag tag-green ml8">{{item.badge}}</text>
+        </view>
+        <view class="tiny dim mt8">{{item.desc}}</view>
+      </view>
+      <text class="dim">›</text>
+    </view>
+  </view>
+
+  <!-- 分红知识 -->
+  <view class="sec-title">分红知识</view>
+  <view class="card-flat">
+    <view
+      wx:for="{{articles}}"
+      wx:key="id"
+      class="menu-row"
+      data-id="{{item.id}}"
+      bindtap="onArticle"
+    >
+      <view class="icon-box icon-soft-gray">{{item.icon}}</view>
+      <view class="flex1 ml16">
+        <view class="mid bold">{{item.title}}</view>
+        <view class="row mt8">
+          <text class="tag tag-gray">{{item.tag}}</text>
+          <text class="tiny dim ml12">阅读 {{item.read}}</text>
+        </view>
+      </view>
+      <text class="dim">›</text>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+  </block>
+
+  <!-- ============ 跨市场搜索 ============ -->
+  <view class="search-panel {{searchOpen ? 'open' : ''}}">
+    <view class="sp-bar">
+      <view class="sp-box">
+        <text class="search-icon">🔍</text>
+        <input
+          class="sp-input"
+          focus="{{searchOpen}}"
+          placeholder="股票代码 / 名称"
+          placeholder-class="ph"
+          value="{{keyword}}"
+          bindinput="onSearchInput"
+        />
+      </view>
+      <text class="sp-cancel" bindtap="closeSearch">取消</text>
+    </view>
+
+    <scroll-view class="sp-body" scroll-y>
+      <view
+        wx:for="{{results}}"
+        wx:key="key"
+        class="sp-row"
+        data-code="{{item.code}}"
+        data-market="{{item.market}}"
+        bindtap="onPickStock"
+      >
+        <view class="flex1">
+          <view class="row">
+            <text class="mid bold">{{item.name}}</text>
+            <text class="tag {{item.cls}} ml8">{{item.marketLabel}}</text>
+          </view>
+          <view class="tiny dim mt8">{{item.code}} · {{item.typeName}}</view>
+        </view>
+        <text class="dim">＋</text>
+      </view>
+
+      <view wx:if="{{noResult}}" class="sp-empty">没有匹配的标的，可在添加页用「自定义标的」录入</view>
+      <view wx:elif="{{!keyword}}" class="sp-empty">输入代码或名称，跨 A股 / 港股 / ETF 一起搜</view>
+    </scroll-view>
+  </view>
+</view>

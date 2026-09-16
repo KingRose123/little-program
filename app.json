@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/onboarding/onboarding",
+    "pages/login/login",
+    "pages/holdings/holdings",
+    "pages/coverage/coverage",
+    "pages/holding-detail/holding-detail",
+    "pages/calendar/calendar",
+    "pages/discover/discover",
+    "pages/profile/profile",
+    "pages/life-expense/life-expense",
+    "pages/add-holding/add-holding",
+    "pages/add-trade/add-trade",
+    "pages/add-dividend/add-dividend",
+    "pages/metric-settings/metric-settings",
+    "pages/holding-record/holding-record",
+    "pages/tool/tool",
+    "pages/rank/rank",
+    "pages/article/article",
+    "pages/doc/doc",
+    "pages/membership/membership"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTitleText": "收息佬",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F7F6"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#9CA3AF",
+    "selectedColor": "#1F9D6B",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/holdings/holdings",
+        "text": "持仓"
+      },
+      {
+        "pagePath": "pages/calendar/calendar",
+        "text": "分红日历"
+      },
+      {
+        "pagePath": "pages/discover/discover",
+        "text": "发现"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

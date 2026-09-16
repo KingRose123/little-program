@@ -1,0 +1,145 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">📋</view>
+    <view class="empty-title">正在加载记录…</view>
+  </view>
+
+  <block wx:else>
+    <!-- 持仓头：让用户确认自己看的是哪只 -->
+    <view class="card">
+      <view class="row">
+        <view class="stock-ico">{{holding.icon}}</view>
+        <view class="flex1 ml12">
+          <view class="row">
+            <text class="bold">{{holding.name}}</text>
+            <text class="tag {{holding.tagClass}} ml8">{{holding.marketTag}}</text>
+          </view>
+          <view class="tiny dim mt8">{{holding.code}} · 持有 {{holding.sharesText}}</view>
+        </view>
+      </view>
+
+      <view class="hr-metrics">
+        <view class="hr-cell">
+          <text class="hr-l">预测年分红</text>
+          <text class="hr-v num">{{holding.dividendText}}</text>
+        </view>
+        <view class="hr-cell">
+          <text class="hr-l">累计已收</text>
+          <text class="hr-v num up">{{receivedText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 三个页签 -->
+    <view class="segs">
+      <view
+        wx:for="{{tabs}}"
+        wx:key="key"
+        class="seg {{tab === item.key ? 'on' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onTab"
+      >
+        <text>{{item.label}}</text>
+        <text wx:if="{{item.count}}" class="seg-badge">{{item.count}}</text>
+      </view>
+    </view>
+
+    <!-- ============ 交易明细 ============ -->
+    <block wx:if="{{tab === 'trade'}}">
+      <view class="card-flat">
+        <view wx:for="{{trade}}" wx:key="id" class="rec-row">
+          <view class="rec-date num">{{item.date}}</view>
+          <view class="flex1 rec-body">
+            <view class="row">
+              <text class="tag {{item.typeClass}}">{{item.type}}</text>
+              <text class="mid ml8">{{item.sharesText}} × {{item.priceText}}</text>
+            </view>
+            <view class="tiny dim mt8">
+              成交金额 {{item.amountText}} · 手续费 {{item.feeText}}
+            </view>
+          </view>
+          <text
+            wx:if="{{!item.seed}}"
+            class="rec-del"
+            data-id="{{item.id}}"
+            data-kind="trade"
+            bindtap="onDelRecord"
+          >删除</text>
+        </view>
+      </view>
+      <view class="rec-note">第一条为建立持仓时录入的买入记录，不可删除。</view>
+    </block>
+
+    <!-- ============ 分红记录 ============ -->
+    <block wx:elif="{{tab === 'dividend'}}">
+      <view wx:if="{{dividend.length}}" class="card-flat">
+        <view wx:for="{{dividend}}" wx:key="id" class="rec-row">
+          <view class="rec-date num">{{item.date}}</view>
+          <view class="flex1 rec-body">
+            <view class="mid bold">{{item.amountText}}</view>
+            <view class="tiny dim mt8">{{item.note}}<text wx:if="{{item.planText !== '—'}}"> · {{item.planText}}</text></view>
+          </view>
+          <text class="rec-del" data-id="{{item.id}}" data-kind="dividend" bindtap="onDelRecord">删除</text>
+        </view>
+      </view>
+      <view wx:else class="card empty">
+        <view class="empty-emoji">💰</view>
+        <view class="empty-title">还没有分红到账记录</view>
+        <view class="empty-desc">每次收到分红后记一笔，累计已收会同步更新</view>
+      </view>
+    </block>
+
+    <!-- ============ 分红档案 ============ -->
+    <block wx:else>
+      <view class="card">
+        <view class="between">
+          <view class="col">
+            <text class="tiny dim">历次方案合计</text>
+            <text class="file-total num">{{fileTotalText}}</text>
+          </view>
+          <view class="col file-right">
+            <text class="tiny dim">已实际到账</text>
+            <text class="file-passed num">{{filePassedText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="sec-head"><text class="h3">历年分红方案</text></view>
+
+      <view wx:if="{{file.length}}" class="card-flat">
+        <view wx:for="{{file}}" wx:key="key" class="file-row">
+          <view class="file-year">
+            <text class="file-year-num num">{{item.year}}</text>
+            <text wx:if="{{item.current}}" class="file-now">最近一次</text>
+            <text wx:elif="{{item.pending}}" class="file-pending">已公告</text>
+          </view>
+          <view class="flex1">
+            <view class="mid">{{item.planText}}</view>
+            <view class="tiny dim mt8">{{item.dateText}}</view>
+          </view>
+          <view class="file-amt">
+            <text class="num file-amt-v">{{item.amountText}}</text>
+            <text class="tiny dim">按当前股数</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="rec-note">{{fileEmptyText}}</view>
+
+      <view wx:if="{{file.length}}" class="rec-note">数据来源：{{fileSource}}；金额按当前股数与红利税折算，实际以公司公告为准。</view>
+    </block>
+
+    <view class="bottom-space"></view>
+  </block>
+</view>
+
+<!-- 记一笔：独立悬浮按钮，不占页签位置；数据到位后带入场动效落下 -->
+<view
+  wx:if="{{!loading && addLabel}}"
+  class="add-fab {{fabReady ? 'in' : ''}}"
+  bindtap="onAdd"
+>
+  <view class="fab-plus"></view>
+  <text>{{addLabel}}</text>
+</view>
+

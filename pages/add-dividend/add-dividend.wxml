@@ -1,0 +1,95 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">
+    <view class="empty-emoji">💰</view>
+    <view class="empty-title">正在加载持仓…</view>
+  </view>
+
+  <block wx:elif="{{holding}}">
+    <view class="title">添加分红记录</view>
+
+    <!-- 股票信息：让用户确认这笔分红记在哪只标的上 -->
+    <view class="stock-card">
+      <view class="stock-label">股票信息</view>
+      <view class="stock-row">
+        <text class="stock-name">{{holding.code}} {{holding.name}}</text>
+        <text class="tag {{holding.tagClass}} ml8">{{holding.marketTag}}</text>
+        <text class="tag tag-gray ml8">{{holding.currencyName}}</text>
+      </view>
+    </view>
+
+    <!-- 入账日期 -->
+    <view class="label"><text class="req">*</text>入账日期</view>
+    <picker mode="date" value="{{date}}" bindchange="onDate">
+      <view class="u-field {{date ? '' : 'ph'}}">{{date || '请选择红利入账日期'}}</view>
+    </picker>
+
+    <!-- 持仓数量 -->
+    <view class="label"><text class="req">*</text>持仓数量</view>
+    <input
+      class="u-field"
+      type="digit"
+      placeholder="红利入账时的持仓股数"
+      placeholder-class="ph"
+      value="{{shares}}"
+      data-field="shares"
+      bindinput="onInput"
+    />
+
+    <!-- 每股派息 -->
+    <view class="label"><text class="req">*</text>每股派息</view>
+    <view class="u-row">
+      <input
+        class="u-field flex1"
+        type="digit"
+        placeholder="每股派息金额（{{holding.currencyName}}）"
+        placeholder-class="ph"
+        value="{{dps}}"
+        data-field="dps"
+        bindinput="onInput"
+      />
+      <text class="unit">{{holding.currencyName}}/股</text>
+    </view>
+
+    <!-- 红利税（选填）：暖色底，强调「不填即视为未扣税」 -->
+    <view class="tax-box">
+      <view class="tax-head">
+        <text class="tax-title">红利税（选填）</text>
+        <view class="q" bindtap="onTaxHelp">?</view>
+      </view>
+      <input
+        class="u-field"
+        type="digit"
+        placeholder="扣税金额"
+        placeholder-class="ph"
+        value="{{tax}}"
+        data-field="tax"
+        bindinput="onInput"
+      />
+      <view class="tax-tip">{{taxTip}}</view>
+    </view>
+
+    <!-- 实际到账金额：默认按公式自动算，手动改过就不再覆盖 -->
+    <view class="label"><text class="req">*</text>实际到账金额</view>
+    <view class="u-row">
+      <input
+        class="u-field flex1"
+        type="digit"
+        placeholder="金额（{{holding.currencyName}}）"
+        placeholder-class="ph"
+        value="{{amount}}"
+        data-field="amount"
+        bindinput="onAmount"
+      />
+      <text class="unit">{{holding.currencyName}}</text>
+    </view>
+    <view class="hint">= 数量 × 每股派息 - 红利税</view>
+
+    <view class="bottom-space"></view>
+
+    <view class="confirm {{submitting ? 'off' : ''}}" bindtap="confirm">
+      {{submitting ? '提交中…' : '确认添加'}}
+    </view>
+
+    <view class="bottom-space"></view>
+  </block>
+</view>

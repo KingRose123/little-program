@@ -1,0 +1,285 @@
+.page { padding-bottom: 260rpx; }
+
+/* ---------- 顶部提示 ---------- */
+.tip-card {
+  margin-top: 24rpx;
+  background: #F0F2F1;
+  border-radius: 18rpx;
+  padding: 26rpx 28rpx;
+  font-size: 26rpx;
+  color: var(--t2);
+  line-height: 1.6;
+}
+
+/* ---------- 分区标题 ---------- */
+.sec-head { margin: 36rpx 8rpx 20rpx; }
+
+.sort-btn {
+  font-size: 24rpx;
+  color: var(--t2);
+  background: #EFF2F1;
+  border-radius: 14rpx;
+  padding: 10rpx 26rpx;
+}
+
+.sort-btn:active { background: #E4E8E6; }
+
+/* ---------- 支出行 ---------- */
+.exp-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.exp-row:last-child { border-bottom: none; }
+
+.exp-ico {
+  width: 44rpx;
+  font-size: 36rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.exp-name {
+  flex: 1;
+  min-width: 0;
+  margin-left: 12rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.exp-amount {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.yen {
+  font-size: 22rpx;
+  color: var(--t3);
+  margin-right: 8rpx;
+}
+
+.amount-input {
+  width: 140rpx;
+  padding: 8rpx 14rpx;
+  background: #F7F9F8;
+  border-radius: 10rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  text-align: right;
+  color: var(--t1);
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  font-size: 22rpx;
+  color: var(--t3);
+  margin-left: 8rpx;
+}
+
+/* 删除按钮：用两条旋转的线画 ×，避免 ✕ 等符号字体的字号/基线差异 */
+.exp-del {
+  width: 56rpx;
+  height: 56rpx;
+  margin-left: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.exp-del:active { opacity: 0.55; }
+
+.x {
+  position: relative;
+  width: 22rpx;
+  height: 22rpx;
+}
+
+.x::before,
+.x::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 22rpx;
+  height: 2.5rpx;
+  margin-top: -1.25rpx;
+  border-radius: 2rpx;
+  background: var(--up);
+}
+
+.x::before { transform: rotate(45deg); }
+.x::after { transform: rotate(-45deg); }
+
+.none {
+  padding: 56rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--t3);
+}
+
+/* ---------- 添加自定义 ---------- */
+.add-custom {
+  margin-top: 24rpx;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 32rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--t2);
+  box-shadow: 0 4rpx 20rpx rgba(23, 43, 35, 0.05);
+}
+
+.add-custom:active { background: #FAFBFB; }
+
+.stat-line {
+  margin-top: 20rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--t3);
+}
+
+.bottom-space { height: 200rpx; }
+
+/* ---------- 底部按钮 ---------- */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 55;
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1rpx solid var(--line);
+}
+
+.go-btn {
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  border-radius: 24rpx;
+  background: #232323;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+}
+
+/* ---------- 添加自定义支出弹层 ---------- */
+.mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 702rpx;
+  max-height: 84vh;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 32rpx;
+  margin-bottom: calc(24rpx + env(safe-area-inset-bottom));
+}
+
+.sheet-title {
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.field-label {
+  font-size: 25rpx;
+  color: var(--t2);
+  margin: 26rpx 0 14rpx;
+}
+
+.field-input {
+  height: 88rpx;
+  background: #F0F2F1;
+  border-radius: 14rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+}
+
+.ph { color: #B9C0BC; }
+
+.group-label {
+  font-size: 23rpx;
+  color: var(--t3);
+  margin: 20rpx 0 14rpx;
+}
+
+/* 面板内容宽 = 702 - 32×2(内边距) = 638rpx
+   固定间隙从左到右排布：7×84 + 7×7 = 637 ≤ 638，每行 7 个。
+   同样不用 space-between，避免末行图标被拉到两端。 */
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.icon-cell {
+  width: 84rpx;
+  height: 84rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #F5F7F6;
+  border: 2rpx solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38rpx;
+  margin-right: 7rpx;
+  margin-bottom: 12rpx;
+}
+
+.icon-cell.on {
+  border-color: #232323;
+  background: #FFFFFF;
+}
+
+.sheet-actions {
+  display: flex;
+  margin-top: 32rpx;
+}
+
+.btn-cancel,
+.btn-confirm {
+  flex: 1;
+  height: 92rpx;
+  line-height: 92rpx;
+  text-align: center;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.btn-cancel {
+  background: #F0F2F1;
+  color: var(--t1);
+  margin-right: 24rpx;
+}
+
+.btn-cancel:active { background: #E4E8E6; }
+
+.btn-confirm {
+  background: #232323;
+  color: #FFFFFF;
+}
+
+.btn-confirm.off { background: #C9CFCC; }

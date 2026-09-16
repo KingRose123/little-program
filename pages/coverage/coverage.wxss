@@ -1,0 +1,175 @@
+/* 右上角大圆弧：圆心与卡片右上圆角重合（translate 50%,-50%），
+   半径 150rpx，被卡片的 overflow:hidden 裁出一段内接弧 */
+.set-arc {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translate(50%, -50%);
+  pointer-events: none;
+}
+
+/* 齿轮按钮：相对卡片定位（right/top 24rpx），与改造前完全一致，
+   所以弧再大图标也不会跑位；底色交由上面的弧提供 */
+.set-btn {
+  position: absolute;
+  right: 24rpx;
+  top: 24rpx;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-btn:active { opacity: 0.6; }
+
+/* 齿轮图标：从 32rpx 放大到 40rpx，按钮盒仍是 64rpx，所以锚点位置不变 */
+.ico-gear {
+  width: 40rpx;
+  height: 40rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E6E9E8' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='3.4'/%3E%3Cpath d='M12 2.6v3.2M12 18.2v3.2M2.6 12h3.2M18.2 12h3.2M5.4 5.4l2.2 2.2M16.4 16.4l2.2 2.2M18.6 5.4l-2.2 2.2M7.6 16.4l-2.2 2.2'/%3E%3C/svg%3E");
+}
+
+.cover-num {
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-top: 8rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.cover-unit {
+  font-size: 28rpx;
+  font-weight: 400;
+  margin-left: 12rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- 成长之路 ---------- */
+.stage-wrap { margin-top: 34rpx; }
+
+.stage-line {
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: #EFF2F1;
+  overflow: hidden;
+}
+
+.stage-line-in {
+  /* 宽度由内联的 --w 提供（0~100%） */
+  width: var(--w, 0%);
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #2FB57E, #1F9D6B);
+}
+
+.stage-dots {
+  display: flex;
+  margin-top: -14rpx;
+}
+
+.stage-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stage-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: #D9DEDC;
+  border: 4rpx solid #fff;
+}
+
+.stage-dot.done { background: var(--primary); }
+.stage-dot.current {
+  background: #fff;
+  border: 4rpx solid var(--primary);
+}
+
+.stage-name {
+  margin-top: 12rpx;
+  font-size: 20rpx;
+  color: var(--t3);
+}
+
+.stage-name.done { color: var(--primary); }
+
+.stage-name.current {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ---------- 下一个目标 ---------- */
+.next-box {
+  margin-top: 26rpx;
+  background: var(--warm-bg);
+  border: 1rpx solid var(--warm-line);
+  border-radius: 18rpx;
+  padding: 24rpx;
+}
+
+/* ---------- 进度条 ---------- */
+.pbar {
+  height: 12rpx;
+  border-radius: 999rpx;
+  background: #EFF2F1;
+  overflow: hidden;
+}
+
+.pbar-in {
+  /* 宽度由内联的 --w 提供（0~100%） */
+  width: var(--w, 0%);
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #F0A24A, #E0892C);
+}
+
+.pbar-in.green {
+  background: linear-gradient(90deg, #2FB57E, #1F9D6B);
+}
+
+/* ---------- 支出清单 ---------- */
+.cov-row {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.cov-row:last-child { border-bottom: none; }
+
+.cov-emoji { font-size: 34rpx; }
+
+.lock { font-size: 24rpx; }
+
+/* ---------- 日志 ---------- */
+.log-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.log-row:last-child { border-bottom: none; }
+
+.log-date {
+  font-size: 24rpx;
+  color: var(--t3);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-empty {
+  margin-top: 24rpx;
+  padding: 40rpx 0;
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--t3);
+}

@@ -1,0 +1,70 @@
+.bottom-space { height: 60rpx; }
+
+.art-title {
+  margin-top: 22rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--t1);
+}
+
+.art-body { margin-top: 12rpx; }
+
+/* 段间距大于行距，长文才不会糊成一团 */
+.art-p {
+  margin-top: 28rpx;
+  font-size: 28rpx;
+  line-height: 1.9;
+  color: var(--t2);
+  text-align: justify;
+}
+
+.art-h {
+  margin-top: 44rpx;
+  padding-left: 20rpx;
+  border-left: 6rpx solid var(--primary);
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--t1);
+}
+
+/* 金句：左侧竖线 + 浅底，与正文拉开层次 */
+.art-q {
+  margin-top: 30rpx;
+  padding: 24rpx 26rpx;
+  border-radius: 16rpx;
+  background: var(--warm-bg);
+  border: 1rpx solid var(--warm-line);
+  font-size: 27rpx;
+  line-height: 1.8;
+  color: #8A5B1C;
+}
+
+/* ---------- 底部工具入口 ---------- */
+.tool-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.tool-row:last-child { border-bottom: none; }
+.tool-row:active { background: #FAFBFB; }
+
+.tool-ico {
+  margin-right: 20rpx;
+  font-size: 40rpx;
+}
+
+.arrow {
+  font-size: 34rpx;
+  color: var(--t3);
+}
+
+.art-foot {
+  padding: 30rpx 8rpx 0;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--t3);
+}

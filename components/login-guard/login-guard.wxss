@@ -1,0 +1,40 @@
+.guard {
+  margin: 60rpx 0;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  padding: 70rpx 48rpx 56rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4rpx 20rpx rgba(23, 43, 35, 0.05);
+}
+
+.icon { font-size: 88rpx; line-height: 1; }
+
+.title {
+  margin-top: 28rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.desc {
+  margin-top: 16rpx;
+  font-size: 25rpx;
+  color: #9CA3AF;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.btn {
+  margin-top: 44rpx;
+  width: 100%;
+  height: 92rpx;
+  line-height: 92rpx;
+}
+
+.guide-link {
+  margin-top: 28rpx;
+  font-size: 25rpx;
+  color: #1F9D6B;
+}

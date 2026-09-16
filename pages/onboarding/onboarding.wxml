@@ -1,0 +1,434 @@
+<view class="ob">
+  <!-- 固定头部 -->
+  <view class="ob-head">
+    <view class="ob-skip" bindtap="skip">跳过，直接登录 ›</view>
+    <view class="ob-tabs">
+      <view
+        wx:for="{{steps}}"
+        wx:key="index"
+        class="ob-tab {{step === index ? 'on' : ''}}"
+        data-step="{{index}}"
+        bindtap="goStep"
+      >
+        <text>{{item}}</text>
+        <view class="ob-line"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="ob-body">
+    <!-- 数据加载中 -->
+    <view wx:if="{{loading}}" class="empty">
+      <view class="empty-emoji">💰</view>
+      <view class="empty-title">正在准备你的收息图谱…</view>
+    </view>
+
+    <!-- ================= 步骤一：了解 ================= -->
+    <block wx:if="{{!loading && step === 0}}">
+      <view class="hero">
+        <view class="hero-logo">💰</view>
+        <view class="hero-name">收息佬</view>
+        <view class="hero-sub">你的股息收入管家</view>
+        <view class="hero-slogan">{{slogan}}</view>
+      </view>
+
+      <view class="card">
+        <view class="row">
+          <view class="icon-box-lg icon-soft-green">📊</view>
+          <view class="flex1 ml16">
+            <view class="h3">记录你的印钞机</view>
+            <view class="small dim mt8">A股 · 港股 · 美股 · 基金 · ETF 全覆盖</view>
+          </view>
+        </view>
+
+        <view class="demo">
+          <view class="between">
+            <view class="row">
+              <view class="stock-ico">{{preview.icon}}</view>
+              <view class="ml12">
+                <view class="row">
+                  <text class="bold">{{preview.name}}</text>
+                  <text class="tag tag-green ml8">{{preview.market}}</text>
+                </view>
+              </view>
+            </view>
+            <view class="col" style="align-items: flex-end">
+              <text class="c-orange bold num">{{preview.dividend}}</text>
+              <text class="tiny dim">预测分红</text>
+            </view>
+          </view>
+          <view class="demo-meta">
+            <text>持仓 {{preview.shares}}</text>
+            <text>成本 {{preview.cost}}</text>
+            <text>股价息率 <text class="c-orange">{{preview.yield}}</text></text>
+          </view>
+        </view>
+      </view>
+
+      <view class="card mt24">
+        <view class="row">
+          <view class="icon-box-lg icon-soft-gold">🔮</view>
+          <view class="flex1 ml16">
+            <view class="h3">预测分红，追踪日历</view>
+            <view class="small dim mt8">知道每一笔钱什么时候到账</view>
+          </view>
+        </view>
+
+        <view class="demo-dark">
+          <view class="small dim-on-dark">预测年度分红</view>
+          <view class="demo-dark-num">{{predict.totalText}}</view>
+          <view class="demo-dark-grid">
+            <view class="col">
+              <text class="tiny dim-on-dark">今年已收</text>
+              <text class="mid mt8">{{predict.receivedText}}</text>
+            </view>
+            <view class="col">
+              <text class="tiny dim-on-dark">综合息率</text>
+              <text class="mid mt8">{{predict.yieldText}}</text>
+            </view>
+            <view class="col">
+              <text class="tiny dim-on-dark">下笔到账</text>
+              <text class="mid c-gold mt8">{{predict.nextPayText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="card mt24">
+        <view class="row">
+          <view class="icon-box-lg icon-soft-orange">🎯</view>
+          <view class="flex1 ml16">
+            <view class="h3">用分红点亮你的生活</view>
+            <view class="small dim mt8">话费、咖啡、物业费…逐项被股息买单</view>
+          </view>
+        </view>
+        <view class="chips">
+          <view wx:for="{{litChips}}" wx:key="*this" class="chip on">{{item}}</view>
+          <view wx:for="{{unlitChips}}" wx:key="*this" class="chip">{{item}}</view>
+        </view>
+        <view class="tiny dim">已点亮 {{litCount}}/{{chipTotal}} 项 · 下一目标：{{nextChip}}</view>
+      </view>
+
+      <view class="dark-card mt24">
+        <view class="row">
+          <view class="icon-box icon-soft-gold">📈</view>
+          <view class="flex1 ml16">
+            <view class="mid bold">坚持 10 年，分红翻 10 倍</view>
+            <view class="tiny dim-on-dark mt8">复利模拟器，看看未来的你</view>
+          </view>
+        </view>
+        <view class="between mt24">
+          <view class="col">
+            <text class="tiny dim-on-dark">现在</text>
+            <text class="h3 mt8">{{compound.nowText}}<text class="tiny dim-on-dark">年分红</text></text>
+          </view>
+          <view class="scale-arrow">→</view>
+          <view class="col" style="align-items: flex-end">
+            <text class="tiny dim-on-dark">{{compound.years}}年后</text>
+            <text class="h3 c-gold mt8">{{compound.futureText}}<text class="tiny dim-on-dark">年分红</text></text>
+          </view>
+        </view>
+      </view>
+
+      <view class="warm-tip mt24">🍵 {{tip}}</view>
+
+      <view class="btn-dark big-btn mt32" bindtap="next">开始规划收息之路 →</view>
+      <view class="foot-link" bindtap="skip">先随便看看，跳过引导</view>
+    </block>
+
+    <!-- ================= 步骤二：选支出 ================= -->
+    <block wx:elif="{{!loading && step === 1}}">
+      <view class="step-head">
+        <view class="step-badge">1</view>
+        <view class="step-title">选择你的日常开销</view>
+        <view class="step-sub">选几项你每月必花的钱，我帮你算算分红多久能帮你买单</view>
+      </view>
+
+      <view class="exp-grid">
+        <view
+          wx:for="{{expenses}}"
+          wx:key="id"
+          class="exp-card {{item.on ? 'on' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="toggleExpense"
+        >
+          <view class="row">
+            <view class="exp-icon">{{item.icon}}</view>
+            <view class="flex1 ml16">
+              <view class="mid bold">{{item.name}}</view>
+              <view class="tiny dim mt8">{{item.amountText}} / {{item.period}}</view>
+            </view>
+            <view class="radio {{item.on ? 'on' : ''}}">
+              <text wx:if="{{item.on}}" class="tick">✓</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="exp-card add" bindtap="addCustom">
+          <view class="row">
+            <view class="exp-icon add-icon">+</view>
+            <view class="flex1 ml16">
+              <view class="mid bold dim">自定义</view>
+              <view class="tiny dim mt8">添加你的支出项</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <!-- ================= 步骤三：定计划 ================= -->
+    <block wx:elif="{{!loading && step === 2}}">
+      <view class="step-head">
+        <view class="step-badge">2</view>
+        <view class="step-title">说说你的投入计划</view>
+        <view class="step-sub">手上有多少、每月能投多少，我来帮你算</view>
+      </view>
+
+      <view class="warm-tip">🎯 要让分红供养你选的 {{selectedCount || 8}} 项开销，每年需 {{targetYearText}}</view>
+
+      <view class="card mt24">
+        <view class="row">
+          <view class="icon-box icon-soft-green">🧊</view>
+          <view class="flex1 ml16 h3">你的投入</view>
+        </view>
+
+        <view class="slider-item">
+          <view class="between">
+            <view>
+              <view class="mid">初始本金</view>
+              <view class="tiny dim mt8">现在已经能投入的钱</view>
+            </view>
+            <text class="h3 c-primary num">{{principalText}}</text>
+          </view>
+          <slider
+            class="slider"
+            min="0"
+            max="1000000"
+            step="10000"
+            value="{{principal}}"
+            data-key="principal"
+            activeColor="#1F9D6B"
+            block-color="#1F9D6B"
+            block-size="22"
+            bindchange="onSlideEnd"
+            bindchanging="onSliding"
+          />
+        </view>
+
+        <view class="divider"></view>
+
+        <view class="slider-item">
+          <view class="between">
+            <view>
+              <view class="mid">每月定投</view>
+              <view class="tiny dim mt8">今后每月新投入的钱</view>
+            </view>
+            <text class="h3 c-primary num">{{monthlyText}}</text>
+          </view>
+          <slider
+            class="slider"
+            min="0"
+            max="20000"
+            step="500"
+            value="{{monthly}}"
+            data-key="monthly"
+            activeColor="#1F9D6B"
+            block-color="#1F9D6B"
+            block-size="22"
+            bindchange="onSlideEnd"
+            bindchanging="onSliding"
+          />
+        </view>
+
+        <view class="divider"></view>
+
+        <view class="slider-item">
+          <view class="between">
+            <view>
+              <view class="mid">预期股息率</view>
+              <view class="tiny dim mt8">假设买入的股票平均每年分红的比例</view>
+            </view>
+            <text class="h3 c-primary num">{{rateText}}</text>
+          </view>
+          <slider
+            class="slider"
+            min="1"
+            max="10"
+            step="0.5"
+            value="{{rate}}"
+            data-key="rate"
+            activeColor="#1F9D6B"
+            block-color="#1F9D6B"
+            block-size="22"
+            bindchange="onSlideEnd"
+            bindchanging="onSliding"
+          />
+        </view>
+      </view>
+
+      <view class="dark-card mt24">
+        <view class="between">
+          <view class="flex1">
+            <view class="mid">{{coverTip}}</view>
+            <view class="tiny dim-on-dark mt12">按每年分红继续买入，利滚利估算</view>
+          </view>
+          <view class="col" style="align-items: flex-end">
+            <text class="pct-gold">{{coverPercent}}%</text>
+            <text class="tiny dim-on-dark">30年内</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="btn-dark big-btn mt32" bindtap="enterBlueprint">看我的收息蓝图 →</view>
+      <view class="foot-link" bindtap="prev">← 返回改支出</view>
+    </block>
+
+    <!-- ================= 步骤四：看蓝图 ================= -->
+    <block wx:elif="{{!loading}}">
+      <view class="step-head">
+        <view class="step-badge">3</view>
+        <view class="step-title">你的收息蓝图</view>
+        <view class="step-sub">假设每年分红继续买入，利滚利估算</view>
+      </view>
+
+      <view class="dark-card">
+        <view class="between">
+          <view>
+            <view class="small dim-on-dark">按你定的计划</view>
+            <view class="tiny dim-on-dark mt8">每天前进一点点</view>
+          </view>
+          <text class="pct-gold">{{coverPercent}}%</text>
+        </view>
+        <view class="divider-dark"></view>
+        <view class="row">
+          <view class="col flex1">
+            <text class="tiny dim-on-dark">覆盖开销</text>
+            <text class="mid mt8">{{targetYearText}}<text class="tiny dim-on-dark">/年</text></text>
+          </view>
+          <view class="col flex1">
+            <text class="tiny dim-on-dark">折合每月</text>
+            <text class="mid mt8">{{targetMonthText}}<text class="tiny dim-on-dark">/月</text></text>
+          </view>
+          <view class="col flex1" style="align-items: flex-end">
+            <text class="tiny dim-on-dark">届时总资产</text>
+            <text class="mid mt8">{{finalAssetsText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="card mt24">
+        <view class="row">
+          <view class="icon-box icon-soft-green">📈</view>
+          <view class="flex1 ml16">
+            <view class="h3">逐年资产与分红</view>
+            <view class="tiny dim mt8">每年定投 + 分红再投，资产滚雪球的过程</view>
+          </view>
+        </view>
+
+        <view class="year-rows">
+          <view wx:for="{{blueprintVisible}}" wx:key="year" class="year-row">
+            <view class="year-badge">{{item.year}}年</view>
+            <view class="flex1 ml16">
+              <view class="mid num">{{item.totalText}}</view>
+              <view class="tiny dim mt8">{{item.label}}</view>
+            </view>
+            <view class="col" style="align-items: flex-end">
+              <view class="mid num">{{item.dividendText}}</view>
+              <view class="tiny dim mt8">当年分红</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="more" bindtap="toggleAllYears">
+          <text class="more-txt">{{showAllYears ? '收起' : '展开全部 30 年'}}</text>
+          <view class="chev {{showAllYears ? 'up' : ''}}"></view>
+        </view>
+      </view>
+
+      <view class="card mt24">
+        <view class="row">
+          <view class="icon-box icon-soft-gold">🏷</view>
+          <view class="flex1 ml16">
+            <view class="h3">开销逐项被买单的时间线</view>
+            <view class="tiny dim mt8">本金 {{planFooter.principalText}} · 月投 {{planFooter.monthlyText}} · 息率 {{planFooter.rateText}} · 分红继续买入</view>
+          </view>
+        </view>
+
+        <view class="tl-rows">
+          <view wx:for="{{timeline}}" wx:key="id" class="tl-row">
+            <view class="exp-icon">{{item.icon}}</view>
+            <view class="flex1 ml16">
+              <view class="mid bold">{{item.name}}</view>
+              <view class="tiny dim mt8">{{item.needText}} / 年</view>
+            </view>
+            <text class="tiny {{item.done ? 'c-primary bold' : 'dim'}}">{{item.yearText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="btn-dark big-btn mt32 {{submitting ? 'off' : ''}}" bindtap="finish">
+        {{submitting ? '生成中…' : '开始收息之路 →'}}
+      </view>
+      <view class="foot-link" bindtap="prev">← 返回调整计划</view>
+    </block>
+  </view>
+
+  <!-- 步骤二底部固定操作条 -->
+  <view wx:if="{{step === 1}}" class="bottom-bar">
+    <view class="flex1">
+      <view class="tiny dim">已选支出合计</view>
+      <view class="h3 num">{{yearTotalText}}<text class="tiny dim">/年</text></view>
+    </view>
+    <view class="next-btn {{selectedCount === 0 ? 'off' : ''}}" bindtap="next">下一步：定计划 →</view>
+  </view>
+
+  <view class="ob-space {{step === 1 ? 'tall' : ''}}"></view>
+  <tab-bar selected="{{-1}}" jump="{{false}}" bind:change="onTabChange" />
+
+  <!-- ============ 自定义支出 ============ -->
+  <view class="sheet-mask {{addOpen ? 'show' : ''}}" bindtap="closeAdd"></view>
+  <view class="sheet {{addOpen ? 'open' : ''}}">
+    <view class="sheet-title">自定义支出</view>
+
+    <view class="f-row">
+      <text class="f-label">名称</text>
+      <input
+        class="f-input"
+        placeholder="如 宠物粮"
+        placeholder-class="ph"
+        value="{{addForm.name}}"
+        data-field="name"
+        bindinput="onAddInput"
+      />
+    </view>
+
+    <view class="f-row">
+      <text class="f-label">每月金额</text>
+      <input
+        class="f-input"
+        type="digit"
+        placeholder="人民币元"
+        placeholder-class="ph"
+        value="{{addForm.amount}}"
+        data-field="amount"
+        bindinput="onAddInput"
+      />
+    </view>
+
+    <view class="f-row f-col">
+      <text class="f-label">图标</text>
+      <view class="chips">
+        <view
+          wx:for="{{iconOptions}}"
+          wx:key="*this"
+          class="chip icon-chip {{addForm.icon === item ? 'on' : ''}}"
+          data-icon="{{item}}"
+          bindtap="onPickIcon"
+        >{{item}}</view>
+      </view>
+    </view>
+
+    <view class="sheet-btn" bindtap="onSubmitAdd">确定</view>
+    <view class="sheet-cancel" bindtap="closeAdd">取消</view>
+  </view>
+</view>

@@ -1,0 +1,43 @@
+{
+  "description": "收息佬小程序",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "参考图",
+        "type": "folder"
+      },
+      {
+        "value": ".codebuddy",
+        "type": "folder"
+      },
+      {
+        "value": ".md",
+        "type": "suffix"
+      }
+    ],
+    "include": []
+  },
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "ignoreUploadUnusedFiles": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.17.2",
+  "appid": "wx1c70462371d75c08",
+  "projectname": "xiji",
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

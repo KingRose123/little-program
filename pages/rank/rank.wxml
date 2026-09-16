@@ -1,0 +1,59 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">🏆</view>
+    <view class="empty-title">正在加载榜单…</view>
+  </view>
+
+  <block wx:else>
+    <view class="card hero">
+      <view class="row">
+        <text class="hero-icon">{{board.icon}}</text>
+        <view class="flex1 ml12">
+          <view class="hero-name">{{board.name}}</view>
+          <view class="hero-badge">{{board.badge}}</view>
+        </view>
+        <text class="tiny dim">{{board.list.length}} 只</text>
+      </view>
+      <view class="hero-note">{{board.note}}</view>
+    </view>
+
+    <view class="sec-head">
+      <text class="h3">完整榜单</text>
+      <text class="tiny dim ml12">点任意标的可直接添加</text>
+    </view>
+
+    <view class="card-flat">
+      <view
+        wx:for="{{board.list}}"
+        wx:key="code"
+        class="rank-row"
+        data-code="{{item.code}}"
+        data-market="{{item.market}}"
+        bindtap="onPick"
+      >
+        <view class="rank-no {{item.top3 ? 'top' : ''}}">{{item.rank}}</view>
+
+        <view class="flex1 rank-body">
+          <view class="row">
+            <text class="mid bold">{{item.name}}</text>
+            <text class="tag {{item.cls}} ml8">{{item.marketLabel}}</text>
+          </view>
+          <view class="tiny dim mt8">{{item.code}}</view>
+          <!-- 条形宽度对榜首归一 -->
+          <view class="bar">
+            <view class="bar-in" style="--w: {{item.width}}%"></view>
+          </view>
+        </view>
+
+        <view class="rank-val">
+          <text class="rank-num num">{{item.valueText}}</text>
+          <text class="rank-unit">{{board.unit}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="foot-tip">榜单基于公开数据整理，仅供研究参考，不构成投资建议。</view>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>

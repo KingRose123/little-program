@@ -1,0 +1,37 @@
+<view class="login">
+  <view class="glow"></view>
+
+  <view class="brand">
+    <view class="logo">💰</view>
+    <view class="app-name">收息佬</view>
+    <view class="slogan">记录持仓，追踪分红，规划收息之路</view>
+  </view>
+
+  <view class="bottom">
+    <view class="guide-entry" bindtap="goGuide">先看看收息佬能做什么 ›</view>
+
+    <!-- 手机号快捷登录：必须用 open-type="getPhoneNumber" 的 button 才能拉起微信授权 -->
+    <view class="main-wrap">
+      <button
+        class="main-btn"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="onGetPhoneNumber"
+        disabled="{{submitting}}"
+      >{{submitting ? '登录中…' : '手机号快捷登录'}}</button>
+      <!-- 未同意协议时用透明遮罩拦截点击，避免先弹授权再提示 -->
+      <view wx:if="{{!agreed}}" class="main-mask" bindtap="onNeedAgree"></view>
+    </view>
+
+    <view class="agree" bindtap="toggleAgree">
+      <view class="checkbox {{agreed ? 'checked' : ''}}">
+        <text wx:if="{{agreed}}" class="tick">✓</text>
+      </view>
+      <view class="agree-text">
+        我已阅读并同意
+        <text class="link" catchtap="onAgreement">《用户协议》</text>
+        和
+        <text class="link" catchtap="onPrivacy">《隐私政策》</text>
+      </view>
+    </view>
+  </view>
+</view>

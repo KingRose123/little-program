@@ -1,0 +1,504 @@
+.page-flat { padding-top: 24rpx; }
+
+/* ---------- 顶部深色卡 ---------- */
+.top { border-radius: 28rpx; }
+
+/* 收息第 N 天：[行首图标] + 文案 + [句尾 emoji]
+   尺寸经计算保证单行显示：卡片内容宽 646 - 行首图标块 64 = 582rpx
+   文案 22rpx 约需 466rpx + 句尾胶囊 44rpx = 510rpx，留 70rpx 余量 */
+.streak {
+  display: flex;
+  align-items: center;
+}
+
+.streak-ico {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(150deg, #FF9E8E 0%, #F4586B 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12rpx;
+}
+
+.streak-ico text {
+  font-size: 28rpx;
+  line-height: 1;
+  /* 把 emoji 变成白色剪影，贴合参考图的"白图标 + 暖色底" */
+  filter: brightness(0) invert(1);
+}
+
+/* flex: 0 1 auto —— 文案按内容宽度排布，不够时才收缩，
+   这样句尾的 emoji 会紧跟文字，不会被推到行末 */
+.streak-txt {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.4;
+  /* 强制单行；万一字体差异导致超宽，用省略号兜底而不是硬裁切 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 句尾 emoji：两端半圆的胶囊底，颜色比卡片底色更浅一档 */
+.streak-emoji {
+  flex-shrink: 0;
+  height: 32rpx;
+  padding: 0 8rpx;
+  margin-left: 8rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.13);
+  font-size: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.big-num {
+  font-size: 66rpx;
+  font-weight: 700;
+  letter-spacing: -1rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.future {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.metric-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.metric {
+  width: 33.33%;
+  display: flex;
+  flex-direction: column;
+  padding: 14rpx 0;
+}
+
+.metric .mid { color: #FFFFFF; font-variant-numeric: tabular-nums; }
+
+/* 深色卡上的涨色 */
+.metric .mid.c-up-on-dark { color: #FF8A8E; }
+
+/* 收起/展开 在左、设置指标 在右（.between 提供 space-between） */
+.toggle-row {
+  margin-top: 24rpx;
+}
+
+.metric-set {
+  font-size: 24rpx;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* 查看更多指标 / 收起：文字与箭头用 flex 垂直居中，箭头样式见 app.wxss 的 .chev */
+.toggle {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.toggle-txt {
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+/* ---------- 分红覆盖 ---------- */
+/* 卡片内容宽 = 750 - 24×2(页面) - 28×2(卡片) = 646rpx
+   固定间隙从左到右依次排布：7×84 + 7×8 = 644 ≤ 646，每行 7 个。
+   不用 space-between —— 否则不满一行时元素会被拉到左右两端。 */
+.cov-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 24rpx;
+}
+
+.cov-item {
+  width: 84rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14rpx 0 12rpx;
+  margin-right: 8rpx;
+  margin-bottom: 14rpx;
+  border-radius: 14rpx;
+  background: #F7F9F8;
+  border: 1rpx solid #E9EDEB;
+}
+
+.cov-icon {
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.cov-name {
+  margin-top: 10rpx;
+  font-size: 20rpx;
+  line-height: 1;
+  color: var(--t3);
+  white-space: nowrap;
+}
+
+/* 已完成 与 进行中 使用同一套配色（品牌绿），仅靠实线/虚线区分状态 */
+.cov-item.on,
+.cov-item.doing {
+  background: linear-gradient(160deg, rgba(31, 157, 107, 0.16), rgba(31, 157, 107, 0.05));
+  border-color: rgba(31, 157, 107, 0.3);
+}
+
+.cov-item.on .cov-name,
+.cov-item.doing .cov-name {
+  color: var(--primary);
+}
+
+/* 进行中：同色，改用虚线描边 */
+.cov-item.doing {
+  border-style: dashed;
+}
+
+/* ---------- 我的持仓 ---------- */
+.sec-head { margin: 40rpx 8rpx 0; }
+
+.count-tag {
+  font-size: 22rpx;
+  color: var(--t2);
+  background: #EFF2F1;
+  border-radius: 10rpx;
+  padding: 4rpx 14rpx;
+}
+
+/* 排序 / 分组 / 设置指标：浅灰底圆角按钮 */
+.mini {
+  font-size: 24rpx;
+  color: var(--t2);
+  background: #EFF2F1;
+  border-radius: 14rpx;
+  padding: 12rpx 24rpx;
+}
+
+.mini:active { background: #E4E8E6; }
+
+/* 排序 / 分组改过默认口径时点亮 */
+.mini.acted {
+  background: rgba(31, 157, 107, 0.12);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* 标签按实际持仓动态生成，最多 5 个，放不下时横向滚动 */
+.tabs {
+  display: flex;
+  margin: 22rpx 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* 未选中：白底灰字；选中：深色底白字 */
+.tab {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 30rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  margin-right: 16rpx;
+  font-size: 26rpx;
+  color: var(--t2);
+  flex-shrink: 0;
+}
+
+.tab.on {
+  background: #232323;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+/* 圆点按市场着色，不随选中态变化 */
+.dot-a { background: #E5484D; }    /* A股 —— 红 */
+.dot-hk { background: #1F9D6B; }   /* 港股 —— 绿 */
+.dot-etf { background: #D9A93C; }  /* ETF —— 金 */
+.dot-fund { background: #7B61FF; } /* 基金 —— 紫 */
+.dot-us { background: #3B82C4; }   /* 美股 —— 蓝 */
+
+/* ---------- 分组标题 ---------- */
+/* 分组态下每组一个小标题；不分组时 title 为空，整体不渲染 */
+.group-head {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0 14rpx;
+}
+
+.group-title {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+/* ---------- 持仓卡 ---------- */
+.hold-card { margin-bottom: 20rpx; }
+
+/* 一只持仓都没有 */
+.hold-empty {
+  padding: 70rpx 20rpx;
+  text-align: center;
+  font-size: 25rpx;
+  color: var(--t3);
+}
+
+.stock-ico {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 18rpx;
+  background: #EDF0EF;
+  color: var(--t2);
+  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 预测分红：主数字用深色，橙色只留给息率等强调值 */
+.hold-dividend {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.5rpx;
+  line-height: 1.1;
+}
+
+/* 四列指标：浅灰底圆角容器，列内居中，列间细分隔线 */
+.hold-meta {
+  display: flex;
+  margin-top: 26rpx;
+  background: #F7F9F8;
+  border-radius: 18rpx;
+  padding: 22rpx 0;
+}
+
+.meta-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-left: 1rpx solid #E7EBE9;
+}
+
+.meta-cell:first-child { border-left: none; }
+
+.meta-label {
+  font-size: 22rpx;
+  color: var(--t3);
+}
+
+.meta-value {
+  font-size: 27rpx;
+  color: var(--t1);
+  font-weight: 500;
+  margin-top: 10rpx;
+}
+
+.meta-value.up { color: var(--orange); }
+
+/* ---------- 悬浮操作菜单 ---------- */
+/* 展开时的占位层：点击空白收起，同时挡住底层滚动 */
+.fab-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 58;
+}
+
+.speed-dial {
+  position: fixed;
+  right: 32rpx;
+  /* FAB 底部 150 + FAB 高 96 + 间距 20 */
+  bottom: 266rpx;
+  z-index: 59;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* 收起态：透明、下移、缩小；展开时缓慢弹出 */
+.speed-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 26rpx;
+  opacity: 0;
+  transform: translateY(28rpx) scale(0.86);
+  transform-origin: right center;
+  transition: opacity 0.42s ease, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.speed-dial.open .speed-item {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.speed-label {
+  margin-right: 16rpx;
+  padding: 16rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  color: var(--t1);
+  white-space: nowrap;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.12);
+}
+
+.speed-btn {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease;
+}
+
+/* emoji 先收成 line-height:1 的方盒再交给 flex 居中：
+   系统字体默认行高约 1.4 倍，且 emoji 基线偏上，
+   直接让 flex 居中的是"行盒"而不是字形，看起来就会偏下 */
+.speed-emoji {
+  display: block;
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.speed-btn.warm { background: #FDF4D8; }
+
+.speed-item:active .speed-btn { transform: scale(0.92); }
+
+/* 加号用两条线画，整体旋转 45° 即变成叉号 */
+.fab-icon {
+  position: relative;
+  width: 40rpx;
+  height: 40rpx;
+  transition: transform 0.32s ease;
+}
+
+.fab-icon::before,
+.fab-icon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #FFFFFF;
+  border-radius: 3rpx;
+}
+
+.fab-icon::before {
+  width: 40rpx;
+  height: 4rpx;
+  margin: -2rpx 0 0 -20rpx;
+}
+
+.fab-icon::after {
+  width: 4rpx;
+  height: 40rpx;
+  margin: -20rpx 0 0 -2rpx;
+}
+
+.fab.on .fab-icon { transform: rotate(45deg); }
+
+.bottom-space { height: 180rpx; }
+
+/* ---------- 排序 / 分组 选择面板 ---------- */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 88;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 常驻 DOM：收起时整体下移出屏，展开时滑入，避免 wx:if 导致动画不生效 */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 89;
+  background: #FFFFFF;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 8rpx 0 calc(20rpx + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.26s ease;
+}
+
+.sheet.open {
+  transform: translateY(0);
+}
+
+.sheet-title {
+  padding: 30rpx 32rpx 18rpx;
+  text-align: center;
+  font-size: 25rpx;
+  color: var(--t3);
+}
+
+.sheet-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 32rpx;
+  border-top: 1rpx solid var(--line);
+  font-size: 29rpx;
+  color: var(--t1);
+}
+
+.sheet-item.on {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.sheet-item:active {
+  background: #F7F9F8;
+}
+
+.sheet-tick {
+  font-size: 30rpx;
+  color: var(--primary);
+}
+
+.sheet-cancel {
+  margin: 20rpx 24rpx 0;
+  padding: 28rpx 0;
+  text-align: center;
+  font-size: 30rpx;
+  color: var(--t2);
+  background: #F4F6F5;
+  border-radius: 20rpx;
+}

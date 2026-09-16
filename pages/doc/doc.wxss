@@ -1,0 +1,45 @@
+.bottom-space { height: 60rpx; }
+
+/* ---------- 法律文本 ---------- */
+.doc-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+/* 段落用行高拉开呼吸感，段间距比行距大一档 */
+.doc-p {
+  margin-top: 26rpx;
+  font-size: 27rpx;
+  line-height: 1.85;
+  color: var(--t2);
+  text-align: justify;
+}
+
+.doc-foot {
+  padding: 28rpx 8rpx 0;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--t3);
+}
+
+/* ---------- 说明型键值对 ---------- */
+.doc-row {
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.doc-row:last-child { border-bottom: none; }
+
+.doc-label {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.doc-value {
+  margin-top: 10rpx;
+  font-size: 25rpx;
+  line-height: 1.7;
+  color: var(--t2);
+}

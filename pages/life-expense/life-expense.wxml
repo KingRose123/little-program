@@ -1,0 +1,112 @@
+<view class="page">
+  <view class="h1">生活支出设置</view>
+
+  <view class="tip-card">告诉我你的生活花销，我来算算你的股息能替你付哪些账单</view>
+
+  <view class="between sec-head">
+    <text class="h3">我的支出</text>
+    <view class="sort-btn" bindtap="onSort">排序</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">🎯</view>
+    <view class="empty-title">正在加载支出清单…</view>
+  </view>
+
+  <block wx:else>
+  <view class="card-flat">
+    <view wx:for="{{expenses}}" wx:key="id" class="exp-row">
+      <text class="exp-ico">{{item.icon}}</text>
+      <text class="exp-name">{{item.name}}</text>
+
+      <view class="exp-amount">
+        <text class="yen">¥</text>
+        <input
+          class="amount-input"
+          type="digit"
+          value="{{item.amount}}"
+          data-id="{{item.id}}"
+          bindinput="onAmountInput"
+          bindblur="onAmountBlur"
+        />
+        <text class="unit">/月</text>
+      </view>
+
+      <view class="exp-del" data-id="{{item.id}}" bindtap="onRemove">
+        <view class="x"></view>
+      </view>
+    </view>
+
+    <view wx:if="{{!expenses.length}}" class="none">还没有支出项，先添加一个吧</view>
+  </view>
+
+  <view class="add-custom" bindtap="openAdd">＋ 添加自定义支出</view>
+
+  <view class="stat-line">
+    共 {{count}} 项 · 每月 {{monthText}} · 每年 {{yearText}}
+  </view>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>
+
+<view wx:if="{{!loading}}" class="bottom-bar">
+  <view class="go-btn" bindtap="goCoverage">查看分红覆盖 →</view>
+</view>
+
+<!-- ================= 添加自定义支出 ================= -->
+<view wx:if="{{showAdd}}" class="mask" bindtap="closeAdd">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-title">添加自定义支出</view>
+
+    <view class="field-label">名称</view>
+    <input
+      class="field-input"
+      placeholder="如：健身房"
+      placeholder-class="ph"
+      value="{{addForm.name}}"
+      data-key="name"
+      bindinput="onAddInput"
+    />
+
+    <view class="field-label">月度金额（人民币）</view>
+    <input
+      class="field-input"
+      type="digit"
+      placeholder="如：200"
+      placeholder-class="ph"
+      value="{{addForm.amount}}"
+      data-key="amount"
+      bindinput="onAddInput"
+    />
+
+    <view class="field-label">图标</view>
+
+    <view class="group-label">生活</view>
+    <view class="icon-grid">
+      <view
+        wx:for="{{icons.life}}"
+        wx:key="*this"
+        class="icon-cell {{addForm.icon === item ? 'on' : ''}}"
+        data-icon="{{item}}"
+        bindtap="pickIcon"
+      >{{item}}</view>
+    </view>
+
+    <view class="group-label">出行</view>
+    <view class="icon-grid">
+      <view
+        wx:for="{{icons.travel}}"
+        wx:key="*this"
+        class="icon-cell {{addForm.icon === item ? 'on' : ''}}"
+        data-icon="{{item}}"
+        bindtap="pickIcon"
+      >{{item}}</view>
+    </view>
+
+    <view class="sheet-actions">
+      <view class="btn-cancel" bindtap="closeAdd">取消</view>
+      <view class="btn-confirm {{submitting ? 'off' : ''}}" bindtap="confirmAdd">添加</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,222 @@
+<view class="page-flat">
+  <!-- 未登录守卫 -->
+  <login-guard
+    wx:if="{{guest}}"
+    icon="💰"
+    title="登录后查看你的持仓"
+    desc="登录即可同步持仓、分红与覆盖进度"
+  />
+
+  <!-- 加载中 -->
+  <view wx:elif="{{loading}}" class="empty">
+    <view class="empty-emoji">💰</view>
+    <view class="empty-title">正在加载你的持仓…</view>
+  </view>
+
+  <block wx:else>
+  <!-- 顶部总览 -->
+  <view class="dark-card top">
+    <view wx:if="{{sum.holdDays > 0}}" class="streak">
+      <view class="streak-ico"><text>🔥</text></view>
+      <text class="streak-txt">收息第 {{sum.holdDays}} 天，每一段伟大的旅程都从第一步开始</text>
+      <text class="streak-emoji">💪</text>
+    </view>
+
+    <view class="between mt32">
+      <text class="small dim-on-dark">预测年度分红</text>
+      <text class="tiny dim-on-dark">基于 {{sum.count}} 只持仓</text>
+    </view>
+
+    <view class="between mt8">
+      <text class="big-num">{{sum.dividendText}}</text>
+      <view class="future" bindtap="goProjection">
+        <text>✨ 20年可达 {{sum.multipleText}} 倍 ›</text>
+      </view>
+    </view>
+
+    <!-- 选 0 个指标时整个汇总区自动收起 -->
+    <block wx:if="{{sum.metrics.length}}">
+      <block wx:if="{{expanded}}">
+        <view class="divider-dark"></view>
+
+        <view class="metric-grid">
+          <view wx:for="{{sum.metrics}}" wx:key="key" class="metric">
+            <text class="tiny dim-on-dark">{{item.name}}</text>
+            <text class="mid mt8 {{item.tone === 'up' ? 'c-up-on-dark' : ''}}">{{item.value}}</text>
+          </view>
+        </view>
+      </block>
+
+      <!-- 收起态下两个入口分列左右两侧 -->
+      <view class="between toggle-row">
+        <view class="toggle" bindtap="toggleExpand">
+          <text class="toggle-txt">{{expanded ? '收起' : '查看更多指标'}}</text>
+          <view class="chev {{expanded ? 'up' : ''}}"></view>
+        </view>
+        <view class="metric-set" bindtap="goMetricSettings">⚙ 设置指标</view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 暖色提示 -->
+  <view class="warm-tip mt24">☕ 今天的咖啡钱，可能已经被股息买单了</view>
+
+  <!-- 分红覆盖 -->
+  <view class="card mt24">
+    <view class="between" bindtap="goCoverage">
+      <view class="row">
+        <view class="icon-box icon-soft-gold">🎯</view>
+        <view class="h3 ml12">分红覆盖</view>
+      </view>
+      <text class="dim small">›</text>
+    </view>
+
+    <view class="cov-grid">
+      <view
+        wx:for="{{coverageGrid}}"
+        wx:key="id"
+        class="cov-item {{item.on ? 'on' : ''}} {{item.doing ? 'doing' : ''}}"
+      >
+        <text class="cov-icon">{{item.icon}}</text>
+        <text class="cov-name">{{item.name}}</text>
+      </view>
+    </view>
+
+    <view class="between mt16">
+      <text class="tiny dim">已点亮 {{coveredCount}}/{{totalCount}} 项</text>
+    </view>
+
+    <view class="warm-tip mt16" bindtap="goCoverage">
+      <text class="flex1">再攒 {{gapText}} 分红就能点亮 {{nextIcon}}{{nextName}}</text>
+      <text class="dim">›</text>
+    </view>
+  </view>
+
+  <!-- 我的持仓 -->
+  <view class="between sec-head">
+    <view class="row">
+      <text class="h2">我的持仓</text>
+      <text class="count-tag ml8">{{sum.count}}只</text>
+    </view>
+    <view class="row">
+      <!-- 改了默认口径时按钮变绿，具体选了哪项在面板里打勾 -->
+      <view class="mini {{sortKey !== 'default' ? 'acted' : ''}}" bindtap="onSort">排序</view>
+      <view class="mini ml12 {{groupKey !== 'none' ? 'acted' : ''}}" bindtap="onGroup">分组</view>
+    </view>
+  </view>
+
+  <view class="tabs">
+    <view
+      wx:for="{{tabList}}"
+      wx:key="key"
+      class="tab {{market === item.key ? 'on' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onMarket"
+    >
+      <view class="dot {{item.dotClass}}"></view>
+      <text>{{item.label}} {{item.count}}</text>
+    </view>
+  </view>
+
+  <!-- 不分组时只有一个组且无组标题，结构与分组态一致 -->
+  <block wx:for="{{viewGroups}}" wx:key="key" wx:for-index="gi" wx:for-item="group">
+    <view wx:if="{{group.title}}" class="group-head">
+      <text class="group-title">{{group.title}}</text>
+      <text class="tiny dim ml8">{{group.count}}只</text>
+    </view>
+
+    <view
+      wx:for="{{group.list}}"
+      wx:for-item="h"
+      wx:for-index="hi"
+      wx:key="id"
+      class="card hold-card"
+      data-id="{{h.id}}"
+      bindtap="goDetail"
+    >
+      <view class="between">
+        <view class="row">
+          <view class="stock-ico">{{h.icon}}</view>
+          <view class="ml12">
+            <view class="row">
+              <text class="bold">{{h.name}}</text>
+              <text class="tag {{h.tagClass}} ml8">{{h.marketTag}}</text>
+            </view>
+            <view class="tiny dim mt8">{{h.code}}</view>
+          </view>
+        </view>
+        <view class="col" style="align-items: flex-end">
+          <text class="hold-dividend num">{{h.dividendText}}</text>
+          <text class="tiny dim mt8">预测分红</text>
+        </view>
+      </view>
+
+      <view class="hold-meta">
+        <view class="meta-cell">
+          <text class="meta-label">市值</text>
+          <text class="meta-value num">{{h.marketValueText}}</text>
+        </view>
+        <view class="meta-cell">
+          <text class="meta-label">成本</text>
+          <text class="meta-value num">{{h.costText}}</text>
+        </view>
+        <view class="meta-cell">
+          <text class="meta-label">持仓</text>
+          <text class="meta-value num">{{h.sharesText}}</text>
+        </view>
+        <view class="meta-cell">
+          <text class="meta-label">股价息率</text>
+          <text class="meta-value num up">{{h.priceYieldText}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 一只持仓都没有时的空态 -->
+  <view wx:if="{{!listTotal}}" class="card hold-empty">还没有持仓，点右下角 ＋ 添加第一只收息标的</view>
+
+  <view class="bottom-space"></view>
+  </block>
+</view>
+
+<!-- 悬浮操作：点 ＋ 缓慢展开，＋ 旋转成 ×；占位层点击可收起菜单 -->
+<view wx:if="{{!guest && !loading}}">
+  <view wx:if="{{fabOpen}}" class="fab-mask" bindtap="toggleFab" catchtouchmove="noop"></view>
+
+  <view class="speed-dial {{fabOpen ? 'open' : ''}}">
+    <view
+      wx:for="{{fabActions}}"
+      wx:key="key"
+      class="speed-item"
+      style="transition-delay: {{fabOpen ? (fabActions.length - 1 - index) * 120 : 0}}ms"
+      data-key="{{item.key}}"
+      bindtap="onFabAction"
+    >
+      <view class="speed-label">{{item.icon}} {{item.label}}</view>
+      <view class="speed-btn {{item.btnClass}}"><text class="speed-emoji">{{item.icon}}</text></view>
+    </view>
+  </view>
+
+  <view class="fab {{fabOpen ? 'on' : ''}}" bindtap="toggleFab">
+    <view class="fab-icon"></view>
+  </view>
+</view>
+
+<!-- 排序 / 分组选择面板：常驻 DOM，靠 class 切换来拿到弹出动画 -->
+<view class="sheet-mask {{sheetKey ? 'show' : ''}}" bindtap="closeSheet"></view>
+<view class="sheet {{sheetKey ? 'open' : ''}}">
+  <view class="sheet-title">{{sheetTitle}}</view>
+
+  <view
+    wx:for="{{sheetItems}}"
+    wx:key="key"
+    class="sheet-item {{item.on ? 'on' : ''}}"
+    data-key="{{item.key}}"
+    bindtap="onSheetPick"
+  >
+    <text class="flex1">{{item.desc}}</text>
+    <text wx:if="{{item.on}}" class="sheet-tick">✓</text>
+  </view>
+
+  <view class="sheet-cancel" bindtap="closeSheet">取消</view>
+</view>

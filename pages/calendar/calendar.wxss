@@ -1,0 +1,259 @@
+.page-flat { padding-top: 24rpx; }
+
+.notice-card:active { background: #FAFBFB; }
+
+/* ---------- 日历头 ---------- */
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  padding: 0 30rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav {
+  font-size: 40rpx;
+  color: var(--t3);
+  padding: 0 16rpx;
+  line-height: 1;
+}
+
+/* 点击回今天：留出足够点击热区 */
+.today-link {
+  font-size: 22rpx;
+  color: var(--t3);
+  padding: 10rpx 16rpx 10rpx 0;
+}
+
+.legend { display: flex; align-items: center; }
+
+.lg {
+  display: flex;
+  align-items: center;
+  margin-left: 16rpx;
+  font-size: 19rpx;
+  color: var(--t3);
+}
+
+.lg-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  margin-right: 6rpx;
+}
+
+.blue { background: var(--blue); }
+.orange { background: var(--orange); }
+.green { background: var(--primary); }
+
+.cal-notice {
+  display: flex;
+  align-items: center;
+  background: #F7F9F8;
+  border-radius: 14rpx;
+  padding: 18rpx 22rpx;
+  font-size: 24rpx;
+  color: var(--t2);
+}
+
+.cal-tip {
+  font-size: 21rpx;
+  color: var(--t3);
+  line-height: 1.5;
+}
+
+/* ---------- 日期网格 ---------- */
+.week-row {
+  display: flex;
+  padding-bottom: 10rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.week-cell {
+  flex: 1;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--t3);
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 12rpx;
+}
+
+.day-cell {
+  width: 14.285%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rpx 0;
+}
+
+.day-inner {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 18rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.day-num {
+  font-size: 26rpx;
+  color: var(--t1);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-inner.outside .day-num { color: #C9CFCC; }
+
+.day-inner.selected {
+  background: #232323;
+}
+
+.day-inner.selected .day-num { color: #fff; font-weight: 600; }
+
+.day-inner.today {
+  border: 2rpx solid rgba(31, 157, 107, 0.5);
+}
+
+.day-dot {
+  position: absolute;
+  bottom: 6rpx;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+}
+
+.day-inner.selected .day-dot { background: #fff !important; }
+
+.day-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.menu-row:last-child { border-bottom: none; }
+
+/* ---------- 标签二：年度总览 ---------- */
+.year-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.big-num {
+  font-size: 60rpx;
+  font-weight: 700;
+  letter-spacing: -1rpx;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+/* 柱状图 */
+.chart {
+  position: relative;
+  height: 260rpx;
+  margin-top: 32rpx;
+}
+
+.chart-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.grid-line {
+  height: 1rpx;
+  background: var(--line);
+}
+
+.bars {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bar {
+  width: 24rpx;
+  /* 高度由内联的 --h 提供（0~100%） */
+  height: var(--h, 0%);
+  border-radius: 8rpx 8rpx 4rpx 4rpx;
+  background: #E8ECEA;
+}
+
+.bar.on {
+  background: linear-gradient(180deg, #2FB57E, #1F9D6B);
+}
+
+.x-axis {
+  display: flex;
+  margin-top: 12rpx;
+}
+
+.x-label {
+  flex: 1;
+  text-align: center;
+  font-size: 18rpx;
+  color: var(--t3);
+}
+
+/* 年度总览图例：作用域限定在 .legend-row 内，
+   避免覆盖日历头部那个右对齐的 .lg */
+.legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend-row .lg {
+  display: flex;
+  align-items: center;
+  margin: 0 16rpx;
+  font-size: 21rpx;
+  color: var(--t3);
+}
+
+.lg-box {
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 5rpx;
+  margin-right: 8rpx;
+}
+
+.lg-box.green { background: var(--primary); }
+.lg-box.gray { background: #E8ECEA; }
+.lg-box.dark { background: #232323; }
+
+.bottom-space { height: 200rpx; }

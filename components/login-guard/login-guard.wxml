@@ -1,0 +1,7 @@
+<view class="guard">
+  <view class="icon">{{icon}}</view>
+  <view class="title">{{title}}</view>
+  <view class="desc">{{desc}}</view>
+  <view class="btn-dark btn" bindtap="goGuide">开始了解收息佬</view>
+  <view class="guide-link" bindtap="goLogin">已有账号，直接登录 ›</view>
+</view>

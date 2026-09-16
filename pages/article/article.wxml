@@ -1,0 +1,55 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">📖</view>
+    <view class="empty-title">正在加载文章…</view>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="row">
+        <text class="tag tag-green">{{article.tag}}</text>
+        <text class="tiny dim ml12">{{article.read}}</text>
+      </view>
+
+      <view class="art-title">{{article.title}}</view>
+      <view class="tiny dim mt12">更新于 {{article.updated}}</view>
+
+      <!-- body 是块数组：h 小标题 / p 段落 / q 引用 -->
+      <view class="art-body">
+        <block wx:for="{{article.body}}" wx:key="index">
+          <view wx:if="{{item.t === 'h'}}" class="art-h">{{item.v}}</view>
+          <view wx:elif="{{item.t === 'q'}}" class="art-q">{{item.v}}</view>
+          <view wx:else class="art-p">{{item.v}}</view>
+        </block>
+      </view>
+    </view>
+
+    <view class="sec-head">
+      <text class="h3">动手算一算</text>
+    </view>
+
+    <view class="card-flat">
+      <view class="tool-row" data-id="t1" bindtap="onTool">
+        <text class="tool-ico">🧮</text>
+        <view class="flex1">
+          <view class="mid bold">复利计算器</view>
+          <view class="tiny dim mt8">按你自己的本金与月投，算出 20 年后的样子</view>
+        </view>
+        <text class="arrow">›</text>
+      </view>
+
+      <view class="tool-row" data-id="t4" bindtap="onTool">
+        <text class="tool-ico">📈</text>
+        <view class="flex1">
+          <view class="mid bold">定投回测</view>
+          <view class="tiny dim mt8">把分红再投入，看看历史能滚出多少</view>
+        </view>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
+    <view class="art-foot">本文为理念分享，不构成任何投资建议。</view>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>

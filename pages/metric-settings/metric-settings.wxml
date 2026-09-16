@@ -1,0 +1,86 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="card empty">
+    <view class="empty-emoji">📊</view>
+    <view class="empty-title">正在加载指标配置…</view>
+  </view>
+
+  <block wx:else>
+  <view class="tip">💡 首页顶部汇总区显示哪些数据，你说了算。可选 0-{{max}} 个，点一下添加或取消。选 0 个时汇总区会自动收起，卡片更清爽。</view>
+
+  <!-- 实时预览 -->
+  <view class="between sec-head">
+    <text class="h3">实时预览</text>
+    <text class="reset" bindtap="onReset">恢复默认</text>
+  </view>
+
+  <view class="preview">
+    <view class="preview-label">预测年度分红</view>
+    <view class="preview-num">{{dividendText}}</view>
+
+    <view class="preview-box">
+      <view wx:if="{{selectedMetrics.length}}" class="metric-grid">
+        <view wx:for="{{selectedMetrics}}" wx:key="key" class="metric">
+          <text class="metric-name">{{item.name}}</text>
+          <text class="metric-value num">{{item.value}}</text>
+        </view>
+      </view>
+      <view wx:else class="preview-empty">未选择任何指标，汇总区将自动收起</view>
+    </view>
+
+    <view class="preview-cap">框内为你正在设置的汇总指标</view>
+  </view>
+
+  <!-- 已选指标 -->
+  <view class="between sec-head">
+    <text class="h3">已选指标</text>
+    <text class="tiny dim">已选 {{selectedKeys.length}}/{{max}}</text>
+  </view>
+
+  <view class="card-flat">
+    <view
+      wx:for="{{selectedMetrics}}"
+      wx:key="key"
+      class="mrow"
+      data-key="{{item.key}}"
+      bindtap="toggle"
+    >
+      <view class="idx on">{{index + 1}}</view>
+      <view class="flex1">
+        <view class="mid bold">{{item.name}}</view>
+        <view class="tiny dim mt8">{{item.desc}}</view>
+      </view>
+      <text class="val {{item.tone}}">{{item.value}}</text>
+    </view>
+    <view wx:if="{{!selectedMetrics.length}}" class="none">还没有选择任何指标</view>
+  </view>
+
+  <!-- 可选指标 -->
+  <view class="sec-head">
+    <text class="h3">可选指标</text>
+    <text class="tiny dim ml12">点击可加入展示</text>
+  </view>
+
+  <view class="card-flat">
+    <view
+      wx:for="{{optionalMetrics}}"
+      wx:key="key"
+      class="mrow"
+      data-key="{{item.key}}"
+      bindtap="toggle"
+    >
+      <view class="idx">＋</view>
+      <view class="flex1">
+        <view class="mid">{{item.name}}</view>
+        <view class="tiny dim mt8">{{item.desc}}</view>
+      </view>
+      <text class="val {{item.tone}}">{{item.value}}</text>
+    </view>
+  </view>
+  </block>
+</view>
+
+<view wx:if="{{!loading}}" class="bottom-bar">
+  <view class="save-btn {{submitting ? 'off' : ''}}" bindtap="save">
+    {{submitting ? '保存中…' : '确认保存'}}
+  </view>
+</view>

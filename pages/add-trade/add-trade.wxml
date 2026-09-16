@@ -1,0 +1,80 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">
+    <view class="empty-emoji">📋</view>
+    <view class="empty-title">正在加载持仓…</view>
+  </view>
+
+  <block wx:elif="{{holding}}">
+    <!-- 标题：标的名 · 添加交易，右侧补市场徽标与显示货币 -->
+    <view class="title-row">
+      <text class="title">{{holding.name}} · 添加交易</text>
+      <text class="tag {{holding.tagClass}} ml12">{{holding.marketTag}}</text>
+      <text class="tag tag-gray ml8">{{holding.currencyName}}</text>
+    </view>
+
+    <!-- 交易类型 -->
+    <view class="label">交易类型</view>
+    <view class="types">
+      <view
+        wx:for="{{types}}"
+        wx:key="*this"
+        class="type {{typeIndex === index ? 'on' : ''}}"
+        data-i="{{index}}"
+        bindtap="onType"
+      >{{item}}</view>
+    </view>
+
+    <!-- 交易日期 -->
+    <view class="label"><text class="req">*</text>交易日期</view>
+    <picker mode="date" value="{{date}}" bindchange="onDate">
+      <view class="field view">{{date}}</view>
+    </picker>
+
+    <!-- 数量：标签跟着交易类型走（买入数量 / 卖出数量 …） -->
+    <view class="label"><text class="req">*</text>{{typeName}}数量</view>
+    <input
+      class="field"
+      type="digit"
+      placeholder="请输入数量"
+      placeholder-class="ph"
+      value="{{shares}}"
+      data-field="shares"
+      bindinput="onInput"
+    />
+
+    <!-- 价格 -->
+    <view class="label"><text class="req">*</text>{{typeName}}价格</view>
+    <view class="price-row">
+      <input
+        class="field flex1"
+        type="digit"
+        placeholder="请输入价格（{{holding.currencyName}}）"
+        placeholder-class="ph"
+        value="{{price}}"
+        data-field="price"
+        bindinput="onInput"
+      />
+      <text class="unit">{{holding.currencyName}}/股</text>
+    </view>
+
+    <!-- 交易费用 -->
+    <view class="label">交易费用</view>
+    <input
+      class="field"
+      type="digit"
+      placeholder="交易费用（可选）"
+      placeholder-class="ph"
+      value="{{fee}}"
+      data-field="fee"
+      bindinput="onInput"
+    />
+
+    <view class="bottom-space"></view>
+
+    <view class="confirm {{submitting ? 'off' : ''}}" bindtap="confirm">
+      {{submitting ? '提交中…' : '确认'}}
+    </view>
+
+    <view class="bottom-space"></view>
+  </block>
+</view>

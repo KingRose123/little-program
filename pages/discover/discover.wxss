@@ -1,0 +1,134 @@
+.page-flat { padding-top: 24rpx; }
+
+.head { padding: 0 8rpx; }
+
+/* ---------- 搜索 ---------- */
+.search {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 999rpx;
+  padding: 22rpx 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(23, 43, 35, 0.05);
+}
+
+.search-icon { font-size: 26rpx; }
+
+.search-ph {
+  margin-left: 14rpx;
+  font-size: 25rpx;
+  color: var(--t3);
+}
+
+/* ---------- 分区标题 ---------- */
+/* 注意：不用 margin 简写，避免覆盖 app.wxss 里 .mt* 的 margin-top */
+.sec-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  padding: 0 8rpx;
+  margin: 40rpx 0 20rpx;
+}
+
+/* ---------- 工具卡 ---------- */
+.tool-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.tool-card {
+  width: 48.6%;
+  margin-bottom: 20rpx;
+  padding: 26rpx;
+}
+
+.tool-card:active { background: #FAFBFB; }
+
+/* ---------- 列表行 ---------- */
+.menu-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.menu-row:last-child { border-bottom: none; }
+.menu-row:active { background: #FAFBFB; }
+
+.bottom-space { height: 200rpx; }
+
+/* ---------- 跨市场搜索面板 ---------- */
+/* 常驻 DOM，靠 class 切换显隐，避免每次打开都重建列表 */
+.search-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg, #F5F7F6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.search-panel.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.sp-bar {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 28rpx;
+  padding-top: calc(24rpx + env(safe-area-inset-top));
+  background: #FFFFFF;
+}
+
+.sp-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  background: #F3F5F4;
+  border-radius: 999rpx;
+  padding: 16rpx 26rpx;
+}
+
+.sp-input {
+  flex: 1;
+  min-width: 0;
+  margin-left: 14rpx;
+  font-size: 27rpx;
+  color: var(--t1);
+}
+
+.sp-cancel {
+  padding-left: 26rpx;
+  font-size: 28rpx;
+  color: var(--t2);
+}
+
+.sp-body { flex: 1; }
+
+.sp-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 28rpx;
+  background: #FFFFFF;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.sp-row:active { background: #FAFBFB; }
+
+.sp-empty {
+  padding: 80rpx 60rpx;
+  text-align: center;
+  font-size: 25rpx;
+  color: var(--t3);
+  line-height: 1.6;
+}
+
+.ph { color: #B9C0BC; }

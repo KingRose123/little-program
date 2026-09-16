@@ -1,0 +1,30 @@
+<view class="tab-bar">
+  <view
+    wx:for="{{tabs}}"
+    wx:key="index"
+    class="tab-item {{selected === item.index ? 'on' : ''}}"
+    data-index="{{item.index}}"
+    bindtap="onTap"
+  >
+    <view class="tab-icon">
+      <view wx:if="{{item.icon === 'bars'}}" class="ico-bars">
+        <view class="bar b1"></view>
+        <view class="bar b2"></view>
+        <view class="bar b3"></view>
+      </view>
+      <view wx:elif="{{item.icon === 'calendar'}}" class="ico-cal">
+        <view class="cal-leg l"></view>
+        <view class="cal-leg r"></view>
+        <view class="cal-head"></view>
+      </view>
+      <view wx:elif="{{item.icon === 'compass'}}" class="ico-compass">
+        <view class="needle"></view>
+      </view>
+      <view wx:else class="ico-user">
+        <view class="head"></view>
+        <view class="body"></view>
+      </view>
+    </view>
+    <view class="tab-text">{{item.text}}</view>
+  </view>
+</view>

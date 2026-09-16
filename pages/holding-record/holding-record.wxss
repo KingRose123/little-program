@@ -1,0 +1,263 @@
+/* 给悬浮的「记一笔」按钮留出高度，最后一条记录不会被压住 */
+.bottom-space { height: 200rpx; }
+
+.stock-ico {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 20rpx;
+  background: rgba(31, 157, 107, 0.1);
+  color: var(--primary);
+  font-size: 30rpx;
+  font-weight: 700;
+  text-align: center;
+  line-height: 68rpx;
+  flex-shrink: 0;
+}
+
+.up { color: var(--primary); }
+
+.sec-head { margin: 36rpx 8rpx 20rpx; }
+
+/* ---------- 持仓头 ---------- */
+.hr-metrics {
+  display: flex;
+  margin-top: 26rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.hr-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.hr-l {
+  font-size: 22rpx;
+  color: var(--t3);
+}
+
+.hr-v {
+  margin-top: 10rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+/* ---------- 页签 ---------- */
+.segs {
+  display: flex;
+  margin: 26rpx 0 22rpx;
+}
+
+.seg {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 26rpx;
+  margin-right: 14rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  font-size: 25rpx;
+  color: var(--t2);
+}
+
+/* 选中态用深色底，与首页市场标签保持同一套语言 */
+.seg.on {
+  background: #232323;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.seg-badge {
+  margin-left: 10rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 19rpx;
+  line-height: 1.7;
+}
+
+.seg:not(.on) .seg-badge {
+  background: var(--line-2);
+  color: var(--t3);
+}
+
+/* ---------- 记一笔：悬浮按钮 ---------- */
+.add-fab {
+  position: fixed;
+  right: 32rpx;
+  bottom: calc(48rpx + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  height: 96rpx;
+  padding: 0 34rpx 0 28rpx;
+  border-radius: 999rpx;
+  background: #232323;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.26);
+  /* 入场：从右下角带一点回弹地落下，不占用页签那一行 */
+  opacity: 0;
+  transform: translateY(48rpx) scale(0.86);
+  transition: opacity 0.34s ease, transform 0.42s cubic-bezier(0.22, 1.18, 0.36, 1);
+}
+
+.add-fab.in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  /* 落定后扩散一圈光晕，把注意力引过来 */
+  animation: fab-glow 0.9s ease-out 0.2s 1;
+}
+
+.add-fab:active {
+  transform: translateY(0) scale(0.94);
+  background: #101010;
+}
+
+@keyframes fab-glow {
+  0% { box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.26), 0 0 0 0 rgba(35, 35, 35, 0.26); }
+  100% { box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.26), 0 0 0 28rpx rgba(35, 35, 35, 0); }
+}
+
+/* 加号用两条线画，按下时转 90° 变成「乘」的暗示，再进表单 */
+.fab-plus {
+  position: relative;
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+  transition: transform 0.28s ease;
+}
+
+.fab-plus::before,
+.fab-plus::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: #FFFFFF;
+  border-radius: 2rpx;
+}
+
+.fab-plus::before {
+  width: 30rpx;
+  height: 4rpx;
+  margin: -2rpx 0 0 -15rpx;
+}
+
+.fab-plus::after {
+  width: 4rpx;
+  height: 30rpx;
+  margin: -15rpx 0 0 -2rpx;
+}
+
+.add-fab:active .fab-plus { transform: rotate(90deg); }
+
+/* ---------- 记录行 ---------- */
+.rec-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.rec-row:last-child { border-bottom: none; }
+
+/* 日期定宽，多行之间才对得齐 */
+.rec-date {
+  width: 160rpx;
+  font-size: 23rpx;
+  color: var(--t3);
+  flex-shrink: 0;
+}
+
+.rec-body { min-width: 0; }
+
+.rec-del {
+  padding: 8rpx 0 8rpx 20rpx;
+  font-size: 23rpx;
+  color: var(--t3);
+  flex-shrink: 0;
+}
+
+.rec-del:active { color: #E5484D; }
+
+.rec-note {
+  padding: 24rpx 8rpx 0;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--t3);
+}
+
+/* ---------- 分红档案 ---------- */
+.file-total {
+  margin-top: 8rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.file-right { align-items: flex-end; }
+
+.file-passed {
+  margin-top: 8rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.file-row:last-child { border-bottom: none; }
+
+.file-year {
+  width: 150rpx;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.file-year-num {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.file-now {
+  margin-top: 6rpx;
+  font-size: 18rpx;
+  color: var(--primary);
+}
+
+/* 已公告但还没除权的方案：用橙色区别于「最近一次」 */
+.file-pending {
+  margin-top: 6rpx;
+  font-size: 18rpx;
+  color: var(--orange);
+}
+
+.file-amt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.file-amt-v {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.empty-desc {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  color: var(--t3);
+}

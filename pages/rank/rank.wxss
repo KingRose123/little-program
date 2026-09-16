@@ -1,0 +1,105 @@
+.bottom-space { height: 60rpx; }
+
+/* ---------- 榜头 ---------- */
+.hero-icon { font-size: 52rpx; }
+
+.hero-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.hero-badge {
+  display: inline-block;
+  margin-top: 10rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(31, 157, 107, 0.12);
+  color: var(--primary);
+  font-size: 21rpx;
+}
+
+.hero-note {
+  margin-top: 22rpx;
+  padding-top: 22rpx;
+  border-top: 1rpx solid var(--line);
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--t2);
+}
+
+/* ---------- 榜单行 ---------- */
+.rank-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.rank-row:last-child { border-bottom: none; }
+.rank-row:active { background: #FAFBFB; }
+
+/* 名次：前三名用主色实心，其余弱化 */
+.rank-no {
+  width: 46rpx;
+  height: 46rpx;
+  margin-right: 20rpx;
+  border-radius: 50%;
+  background: #EFF2F1;
+  color: var(--t2);
+  font-size: 23rpx;
+  font-weight: 600;
+  text-align: center;
+  line-height: 46rpx;
+  flex-shrink: 0;
+}
+
+.rank-no.top {
+  background: var(--primary);
+  color: #fff;
+}
+
+.rank-body { min-width: 0; }
+
+/* 对比条：高度压到 8rpx，只在视觉上做倍率提示 */
+.bar {
+  margin-top: 14rpx;
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: #EFF2F1;
+  overflow: hidden;
+}
+
+.bar-in {
+  /* 宽度由内联的 --w 提供（0~100%） */
+  width: var(--w, 0%);
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #2FB57E, #1F9D6B);
+}
+
+.rank-val {
+  margin-left: 20rpx;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rank-num {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.rank-unit {
+  margin-left: 2rpx;
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--t3);
+}
+
+.foot-tip {
+  padding: 30rpx 8rpx 0;
+  font-size: 22rpx;
+  line-height: 1.7;
+  color: var(--t3);
+}

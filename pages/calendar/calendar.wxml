@@ -1,0 +1,174 @@
+<view class="page-flat">
+  <!-- 分段控件：同一页面的两个标签，切换不产生页面跳转 -->
+  <view class="segment">
+    <view class="segment-item {{segment === 0 ? 'on' : ''}}" data-i="0" bindtap="switchSegment">日历</view>
+    <view class="segment-item {{segment === 1 ? 'on' : ''}}" data-i="1" bindtap="switchSegment">年度总览</view>
+  </view>
+
+  <!-- 未登录守卫 -->
+  <login-guard
+    wx:if="{{guest}}"
+    icon="📅"
+    title="登录后查看分红日历"
+    desc="登录即可看到每笔分红的登记日、除权日与派息日"
+  />
+
+  <!-- ================= 标签一：日历 ================= -->
+  <block wx:elif="{{segment === 0}}">
+    <view wx:if="{{loading}}" class="card mt24 empty">
+      <view class="empty-emoji">📅</view>
+      <view class="empty-title">正在排布分红日历…</view>
+    </view>
+
+    <block wx:else>
+    <!-- 分红预告 -->
+    <view class="card mt24 notice-card" bindtap="onNotice">
+      <view class="row">
+        <view class="icon-box-lg icon-soft-gold">💌</view>
+        <view class="flex1 ml16">
+          <view class="small">你有 {{noticeCount}} 只持仓已公布分红方案，等待除权日</view>
+          <view class="tiny dim mt8">预计共可得 <text class="c-orange bold">{{noticeAmount}}</text></view>
+        </view>
+        <text class="dim">›</text>
+      </view>
+    </view>
+
+    <!-- 日历 -->
+    <view class="card mt24">
+      <view class="cal-head">
+        <text class="nav" bindtap="prevMonth">‹</text>
+        <text class="cal-title">{{title}}</text>
+        <text class="nav" bindtap="nextMonth">›</text>
+      </view>
+      <view class="row mt12">
+        <view class="today-link" bindtap="backToday">点击回今天</view>
+        <view class="flex1"></view>
+        <view class="legend">
+          <view wx:for="{{legend}}" wx:key="key" class="lg">
+            <view class="lg-dot {{item.color}}"></view>
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="cal-notice mt20" bindtap="goNextPayingMonth">
+        <text class="flex1">本月暂无待对账分红，翻翻其他月份看看 🌱</text>
+        <text class="dim">›</text>
+      </view>
+
+      <view class="cal-tip mt16">🎺 分红数据已更新至上一个交易日，新披露的方案次日排入日历</view>
+
+      <view class="week-row mt20">
+        <text wx:for="{{week}}" wx:key="*this" class="week-cell">{{item}}</text>
+      </view>
+
+      <view class="days">
+        <view
+          wx:for="{{cells}}"
+          wx:key="key"
+          class="day-cell"
+          data-key="{{item.key}}"
+          bindtap="onDay"
+        >
+          <view class="day-inner {{item.outside ? 'outside' : ''}} {{item.selected ? 'selected' : ''}} {{item.isToday && !item.selected ? 'today' : ''}}">
+            <text class="day-num">{{item.day}}</text>
+            <view wx:if="{{item.events}}" class="day-dot {{item.events[0].type === '派息日' ? 'green' : item.events[0].type === '除权除息' ? 'orange' : 'blue'}}"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 当天事件 -->
+    <view class="day-title mt32">{{selectedKey}}</view>
+
+    <view wx:if="{{monthEvents.length}}" class="card-flat mt16">
+      <view wx:for="{{monthEvents}}" wx:key="code" class="menu-row">
+        <view class="icon-box icon-soft-gold">💰</view>
+        <view class="flex1 ml16">
+          <view class="row">
+            <text class="bold">{{item.name}}</text>
+            <text class="tag {{item.tagClass}} ml8">{{item.type}}</text>
+          </view>
+          <view class="tiny dim mt8">{{item.code}}</view>
+        </view>
+        <text class="h3 c-orange num">{{item.amountText}}</text>
+      </view>
+    </view>
+
+    <view wx:else class="card mt16 empty">
+      <view class="empty-emoji">🗓</view>
+      <view class="empty-title">当天无分红事件</view>
+      <view class="empty-sub">分红到账后会自动记录在这里</view>
+    </view>
+    </block>
+  </block>
+
+  <!-- ================= 标签二：年度总览 ================= -->
+  <block wx:else>
+    <view wx:if="{{ovLoading}}" class="card mt24 empty">
+      <view class="empty-emoji">📊</view>
+      <view class="empty-title">正在统计年度分红…</view>
+    </view>
+
+    <block wx:else>
+    <view class="card mt24">
+      <view class="between">
+        <view class="h2">年度分红总览</view>
+        <view class="row">
+          <text class="nav" bindtap="prevYear">‹</text>
+          <text class="year-text">{{ovYear}}年</text>
+          <text class="nav" bindtap="nextYear">›</text>
+        </view>
+      </view>
+
+      <view class="small dim mt24">年度已到账分红</view>
+      <view class="big-num c-orange num mt8">{{ovReceivedText}}</view>
+
+      <view class="chart">
+        <view class="chart-grid">
+          <view class="grid-line"></view>
+          <view class="grid-line"></view>
+          <view class="grid-line"></view>
+        </view>
+        <view class="bars">
+          <view wx:for="{{ovMonths}}" wx:key="label" class="bar-col">
+            <view class="bar {{item.active ? 'on' : ''}}" style="--h: {{item.height}}%"></view>
+          </view>
+        </view>
+      </view>
+
+      <view class="x-axis">
+        <text wx:for="{{ovMonths}}" wx:key="label" class="x-label">{{item.label}}</text>
+      </view>
+
+      <view class="legend-row mt20">
+        <view class="lg"><view class="lg-box green"></view><text>已到账</text></view>
+        <view class="lg"><view class="lg-box gray"></view><text>暂无记录</text></view>
+        <view class="lg"><view class="lg-box dark"></view><text>选中月</text></view>
+      </view>
+    </view>
+
+    <view wx:if="{{!ovHasData}}" class="card mt24 empty">
+      <view class="empty-emoji">📊</view>
+      <view class="empty-title">该年度暂无分红到账记录</view>
+      <view class="empty-sub">分红到账后会自动记录在这里</view>
+    </view>
+
+    <!-- 同一页面内切回日历标签 -->
+    <view class="card mt24" bindtap="toCalendarTab">
+      <view class="between">
+        <view class="row">
+          <view class="icon-box icon-soft-green">📅</view>
+          <view class="ml12">
+            <view class="mid bold">按月查看分红日历</view>
+            <view class="tiny dim mt8">看看每一笔钱什么时候到账</view>
+          </view>
+        </view>
+        <text class="dim">›</text>
+      </view>
+    </view>
+    </block>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>

@@ -1,0 +1,122 @@
+<view class="page">
+  <!-- 兜底：本地数据都取不到时给条明确提示，而不是一片空白 -->
+  <view wx:if="{{error}}" class="card err">
+    <view class="err-emoji">😵</view>
+    <view class="h3 mt8">会员权益加载失败</view>
+    <view class="tiny dim mt8">请点重试；如果一直失败，可通过「我的 → 联系我们」反馈</view>
+    <view class="err-btn" bindtap="onRetry">重试</view>
+  </view>
+
+  <block wx:else>
+    <!-- 当前档位 -->
+    <view class="status">
+      <view class="between">
+        <view class="row">
+          <view class="crown">👑</view>
+          <view class="ml12">
+            <view class="status-name">{{status.tierName}}</view>
+            <view class="tiny dim-on-dark mt8">{{status.statusText}}</view>
+          </view>
+        </view>
+        <view wx:if="{{status.isPaid}}" class="status-tag">剩 {{status.daysLeft}} 天</view>
+      </view>
+      <view wx:if="{{!status.isPaid}}" class="status-free">{{status.freeText}}</view>
+    </view>
+
+    <!-- 免费开放期：说清楚哪些权益已经免费，避免有人为「本来就免费的功能」付钱 -->
+    <view wx:if="{{!status.selling}}" class="card free-open">
+      <view class="row">
+        <text class="free-emoji">🎉</text>
+        <view class="ml12 flex1">
+          <view class="mid bold">全员免费开放中</view>
+          <view class="tiny dim mt8">持仓数量、港股美股、多账户等功能全部免费使用，无需开通。后续如调整档位会提前公告。</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 权益对比 -->
+    <view class="card">
+      <view class="sec-title center">{{tableTitle}}</view>
+
+      <view class="t-head">
+        <text class="c-name">功能</text>
+        <text class="c-val">免费</text>
+        <text class="c-val">Lite</text>
+        <text class="c-val pro-col">Pro</text>
+      </view>
+
+      <view wx:for="{{features}}" wx:key="name" class="t-row">
+        <view class="c-name">
+          <text>{{item.name}}</text>
+          <text wx:if="{{item.soon}}" class="soon">即将上线</text>
+        </view>
+        <text class="c-val {{item.free === '不支持' ? 'off' : ''}}">{{item.free}}</text>
+        <text class="c-val {{item.lite === '不支持' ? 'off' : ''}}">{{item.lite}}</text>
+        <text class="c-val pro-col on">{{item.pro}}</text>
+      </view>
+
+      <view class="table-note">{{tableNote}}</view>
+    </view>
+
+    <!-- 选择方案 -->
+    <view class="sec-title mt32">选择方案</view>
+
+    <view
+      wx:for="{{plans}}"
+      wx:key="key"
+      class="plan {{item.key === pickedKey ? 'on' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onPick"
+    >
+      <view wx:if="{{item.badge}}" class="plan-badge {{item.best ? 'best' : ''}}">{{item.badge}}</view>
+
+      <view class="plan-head">
+        <view class="flex1">
+          <view class="row">
+            <text class="plan-name">{{item.name}}</text>
+            <text wx:if="{{item.owned}}" class="plan-own">使用中</text>
+          </view>
+          <view wx:if="{{item.subText}}" class="tiny dim mt8">{{item.subText}}</view>
+        </view>
+        <view class="plan-price">
+          <text class="plan-num">{{item.priceText}}</text>
+          <text wx:if="{{item.unit}}" class="plan-unit">{{item.unit}}</text>
+          <text wx:if="{{item.originText}}" class="plan-strike">{{item.originText}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{item.metaText}}" class="plan-meta">{{item.metaText}}</view>
+      <view wx:if="{{item.tip}}" class="plan-tip">💡 {{item.tip}}</view>
+    </view>
+
+    <!-- 说明 -->
+    <view class="notes">
+      <view wx:for="{{notes}}" wx:key="*this" class="note-row">
+        <text class="tick">✓</text>
+        <text>{{item}}</text>
+      </view>
+    </view>
+
+    <!-- 兑换码入口：跟购买入口同生共死 —— 免费开放期隐藏，改回收费自动出现。
+         逻辑（onRedeem）与服务端接口都保留，不影响已经发出去的码。 -->
+    <view wx:if="{{status.selling}}" class="redeem" bindtap="onRedeem">有兑换码？点击兑换 ›</view>
+    <view class="bottom-space"></view>
+  </block>
+</view>
+
+<!-- 底部购买栏：当前选中的方案（免费开放期整条换成说明条，不给付款入口） -->
+<view wx:if="{{ready && !status.selling}}" class="buy-bar free-bar">
+  <view class="buy-info">
+    <text class="buy-price free-price">免费开放中</text>
+    <text class="buy-sub">全部功能已解锁，无需开通</text>
+  </view>
+  <view class="buy-btn off">已免费</view>
+</view>
+
+<view wx:if="{{ready && status.selling}}" class="buy-bar">
+  <view class="buy-info">
+    <text class="buy-price">{{picked.priceText}}<text wx:if="{{picked.unit}}" class="buy-unit">{{picked.unit}}</text></text>
+    <text class="buy-sub">{{picked.name}}<text wx:if="{{picked.subText}}"> · {{picked.subText}}</text></text>
+  </view>
+  <view class="buy-btn {{submitting ? 'off' : ''}}" bindtap="onBuy">{{submitting ? '处理中…' : '立即开通'}}</view>
+</view>

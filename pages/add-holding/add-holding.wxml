@@ -1,0 +1,337 @@
+<view class="page">
+  <!-- ================= 1. 选择股票 ================= -->
+  <view class="card">
+    <view class="card-head">
+      <view class="step-num">1</view>
+      <text class="h3">选择股票</text>
+    </view>
+
+    <view class="chips">
+      <view
+        wx:for="{{markets}}"
+        wx:key="key"
+        class="chip {{marketIndex === index ? 'on' : ''}}"
+        data-i="{{index}}"
+        bindtap="onMarket"
+      >{{item.label}}</view>
+    </view>
+
+    <view class="chips">
+      <view class="chip" bindtap="onCustom">自定义</view>
+      <view class="q" bindtap="onCustomHelp">?</view>
+    </view>
+
+    <input
+      class="search-input"
+      placeholder="输入股票名称或代码搜索"
+      placeholder-class="ph"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+    />
+
+    <view class="divider"></view>
+
+    <!-- 搜索结果下拉：实时接口返回，超出高度可滚动 -->
+    <view wx:if="{{results.length}}" class="results">
+      <view
+        wx:for="{{results}}"
+        wx:key="key"
+        class="result"
+        data-code="{{item.code}}"
+        data-market="{{item.market}}"
+        bindtap="onPickStock"
+      >
+        <text class="tag {{item.cls}} result-tag">{{item.marketTag}}</text>
+        <text class="result-code">{{item.code}}</text>
+        <text class="result-name">{{item.name}}</text>
+        <text class="result-type">{{item.typeName}}</text>
+      </view>
+    </view>
+
+    <!-- 未检索到 -->
+    <view wx:elif="{{noResult}}" class="no-result">未找到匹配的标的，可切换市场标签或使用自定义标的</view>
+
+    <!-- 已选中：一行放完 市场徽标 + 代码 + 名称，右侧重选 -->
+    <view wx:if="{{stockPicked}}" class="picked">
+      <text class="tag {{picked.tagClass}} picked-tag">{{picked.marketTag || picked.marketLabel}}</text>
+      <text class="picked-code num">{{picked.code}}</text>
+      <text class="picked-name">{{picked.name}}</text>
+      <text class="repick" bindtap="onRepick">重选</text>
+    </view>
+
+    <!-- 已选标的的实时数据：最新价 / 涨跌 / 税后股息率 + 分红档案 -->
+    <view wx:if="{{stockPicked}}" class="detail">
+      <view wx:if="{{detailLoading}}" class="detail-note">正在获取实时行情与分红档案…</view>
+      <view wx:elif="{{detailNote}}" class="detail-note">{{detailNote}}</view>
+
+      <block wx:elif="{{detail}}">
+        <view class="quote">
+          <view class="flex1">
+            <view class="quote-label">{{detail.priceLabel}}</view>
+            <view class="quote-price {{detail.trend}}">{{detail.priceText}}</view>
+          </view>
+          <view class="quote-right">
+            <text class="quote-change {{detail.trend}}">{{detail.changeText}}</text>
+            <text class="quote-change {{detail.trend}}">{{detail.changeRateText}}</text>
+          </view>
+        </view>
+
+        <view class="quote-meta">
+          <text class="tiny dim">{{detail.priceDate}}</text>
+          <view class="flex1"></view>
+          <text class="tiny dim">税后股息率 </text>
+          <text class="tiny bold c-primary">{{detail.yieldText}}</text>
+        </view>
+
+        <!-- 分红档案默认收起，点「查看分红档案」再展开历年方案 -->
+        <view class="arc-link" bindtap="toggleArchive">
+          <text>{{archiveOpen ? '收起分红档案' : '查看分红档案'}}</text>
+          <text class="arc-arrow">→</text>
+        </view>
+
+        <block wx:if="{{archiveOpen}}">
+          <block wx:if="{{detail.dividend.hasDividend}}">
+            <view wx:for="{{detail.dividend.list}}" wx:key="index" class="arc-row">
+              <view class="arc-year">
+                <text class="tiny bold">{{item.periodText}}</text>
+                <text wx:if="{{item.current}}" class="arc-now">最近一次</text>
+                <text wx:elif="{{item.pending}}" class="arc-pending">已公告</text>
+              </view>
+              <view class="flex1">
+                <text class="mid">{{item.planText}}</text>
+                <view class="tiny dim mt8">{{item.dateText}}</view>
+              </view>
+              <text class="num tiny dim">每股 {{item.dpsText}}</text>
+            </view>
+
+            <view class="tip-bar">ⓘ {{detail.dividend.basisText}} {{detail.dividend.dpsText}}（近 {{detail.dividend.count}} 次累计 {{detail.dividend.totalDpsText}}）；{{detail.taxTipText}}</view>
+          </block>
+
+          <view wx:else class="tip-bar">ⓘ {{detail.dividend.emptyText}}</view>
+        </block>
+
+        <view class="quote-source">
+          <text class="tiny dim">{{detail.sourceText}}</text>
+          <view class="flex1"></view>
+          <text class="tiny c-primary" bindtap="onRefreshQuote">刷新行情</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- ================= 2. 持仓信息 ================= -->
+  <view class="card {{stockPicked ? '' : 'locked'}}">
+    <view class="card-head">
+      <view class="step-num">2</view>
+      <text class="h3">持仓信息</text>
+      <view class="flex1"></view>
+      <text wx:if="{{!stockPicked}}" class="tiny dim">选股后自动展开</text>
+    </view>
+
+    <view class="two-col">
+      <view class="col-item">
+        <view class="label"><text class="req">*</text>持仓数量</view>
+        <input
+          class="field"
+          type="digit"
+          placeholder="股数"
+          placeholder-class="ph"
+          value="{{shares}}"
+          bindinput="onShares"
+        />
+      </view>
+
+      <view class="col-item">
+        <view class="label"><text class="req">*</text>买入日期</view>
+        <picker mode="date" value="{{buyDate}}" bindchange="onDateChange">
+          <view class="field">{{buyDate}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="label">交易费用</view>
+    <input
+      class="field full"
+      type="digit"
+      placeholder="交易费用（可选）"
+      placeholder-class="ph"
+      value="{{fee}}"
+      bindinput="onFee"
+    />
+
+    <view class="divider"></view>
+
+    <view class="label"><text class="req">*</text>当前成本</view>
+    <view class="chips">
+      <view
+        wx:for="{{costModes}}"
+        wx:key="*this"
+        class="chip sm {{costModeIndex === index ? 'on outline' : ''}}"
+        data-i="{{index}}"
+        bindtap="onCostMode"
+      >{{item}}</view>
+      <view class="q" bindtap="onCostModeHelp">?</view>
+    </view>
+
+    <view class="cost-row">
+      <!-- 勾选「标记为负成本」后：真实成本改写为负数，此处补一个橙色负号 -->
+      <text wx:if="{{showCostMinus}}" class="cost-minus">-</text>
+      <input
+        class="field flex1"
+        type="digit"
+        placeholder="可输入正数、零、或者负数（人民币）"
+        placeholder-class="ph"
+        value="{{cost}}"
+        bindinput="onCost"
+      />
+      <text class="unit">人民币/股</text>
+    </view>
+
+    <view class="check-row" bindtap="toggleNegative">
+      <view class="checkbox {{negativeCost ? 'on' : ''}}">
+        <text wx:if="{{negativeCost}}" class="tick">✓</text>
+      </view>
+      <text class="check-label">标记为负成本（成本已通过卖出全部收回）</text>
+    </view>
+  </view>
+
+  <!-- ================= 3. 分红预测口径 ================= -->
+  <view class="card {{stockPicked ? '' : 'locked'}}">
+    <view class="card-head">
+      <view class="step-num">3</view>
+      <text class="h3">分红预测口径</text>
+      <view class="q inline ml12" bindtap="onDivHelp">?</view>
+      <view class="flex1"></view>
+      <text wx:if="{{!stockPicked}}" class="tiny dim">选股后自动展开</text>
+    </view>
+
+    <view class="chips">
+      <view
+        wx:for="{{divModes}}"
+        wx:key="*this"
+        class="chip div {{divModeIndex === index ? 'on' : ''}}"
+        data-i="{{index}}"
+        bindtap="onDivMode"
+      >{{item}}</view>
+    </view>
+
+    <input
+      wx:if="{{divModeIndex === 3}}"
+      class="field full mt24"
+      type="digit"
+      placeholder="请输入每股派息（元）"
+      placeholder-class="ph"
+      value="{{customDividend}}"
+      bindinput="onCustomDividend"
+    />
+
+    <view class="between mt24">
+      <text class="label">年均每股分红（税后）</text>
+      <text wx:if="{{stockPicked && dividendEmpty}}" class="tiny dim">该口径无分红记录</text>
+      <text wx:else class="div-value">{{dividendText}}</text>
+    </view>
+
+    <view class="calc-link" bindtap="onDivDetail">
+      <text>查看计算明细</text>
+      <view class="chev right"></view>
+    </view>
+
+    <view class="tip-bar">ⓘ {{divTip}}</view>
+  </view>
+
+  <!-- ================= 4. 分红税率 ================= -->
+  <view class="card {{stockPicked ? '' : 'locked'}}">
+    <view class="card-head">
+      <view class="step-num">4</view>
+      <text class="h3">分红税率</text>
+      <view class="q inline ml12" bindtap="onTaxHelp">?</view>
+      <view class="flex1"></view>
+      <text wx:if="{{!stockPicked}}" class="tiny dim">选股后自动展开</text>
+    </view>
+
+    <!-- 港股 / 美股的红利税差别很大，所以逐只选，不按市场写死 -->
+    <view class="chips">
+      <view
+        wx:for="{{taxOptions}}"
+        wx:key="text"
+        class="chip tax {{taxIndex === index ? 'on' : ''}}"
+        data-i="{{index}}"
+        bindtap="onTax"
+      >{{item.text}}</view>
+    </view>
+
+    <input
+      wx:if="{{taxCustom}}"
+      class="field full mt24"
+      type="digit"
+      placeholder="请输入税率（%）"
+      placeholder-class="ph"
+      value="{{taxCustomRate}}"
+      bindinput="onTaxCustom"
+    />
+
+    <view class="tax-tip">{{taxTip}}</view>
+
+    <view class="tax-switch" bindtap="toggleTaxOn">
+      <view class="flex1">
+        <view class="mid bold">预测分红扣税</view>
+        <view class="tiny dim mt8">开启后，预测分红金额将按上方税率扣除红利税</view>
+      </view>
+      <view class="switch {{taxOn ? 'on' : ''}}"><view class="switch-dot"></view></view>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>
+
+<!-- 自定义标的面板：常驻 DOM，靠 class 切换弹出动画 -->
+<view class="sheet-mask {{customOpen ? 'show' : ''}}" bindtap="closeCustom"></view>
+<view class="sheet {{customOpen ? 'open' : ''}}">
+  <view class="sheet-title">自定义标的</view>
+
+  <view class="cf-body">
+    <view class="label">股票代码</view>
+    <input
+      class="field full"
+      placeholder="如 600519 / 00700"
+      placeholder-class="ph"
+      value="{{cf.code}}"
+      data-field="code"
+      bindinput="onCfInput"
+    />
+
+    <view class="label mt24">股票名称</view>
+    <input
+      class="field full"
+      placeholder="如 贵州茅台"
+      placeholder-class="ph"
+      value="{{cf.name}}"
+      data-field="name"
+      bindinput="onCfInput"
+    />
+
+    <view class="label mt24">每股派息（税后）</view>
+    <input
+      class="field full"
+      type="digit"
+      placeholder="按最近一期分红填写"
+      placeholder-class="ph"
+      value="{{cf.dps}}"
+      data-field="dps"
+      bindinput="onCfInput"
+    />
+
+    <view class="tip-bar">ⓘ 市场按上方所选标签归属，费用、成本与分红口径在下一步填写。</view>
+  </view>
+
+  <view class="confirm on" bindtap="onCfSubmit">确定</view>
+  <view class="sheet-cancel" bindtap="closeCustom">取消</view>
+</view>
+
+<view class="confirm-bar">
+  <view class="confirm {{canSubmit ? 'on' : ''}} {{submitting ? 'off' : ''}}" bindtap="confirm">
+    {{submitting ? '添加中…' : '确认添加'}}
+  </view>
+</view>

@@ -1,0 +1,467 @@
+.ob {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ---------- 固定头部 ---------- */
+.ob-head {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--bg);
+  padding-top: 16rpx;
+}
+
+.ob-skip {
+  text-align: right;
+  padding: 8rpx 32rpx 12rpx;
+  font-size: 25rpx;
+  color: var(--t3);
+}
+
+.ob-tabs {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 32rpx;
+}
+
+.ob-tab {
+  flex: 1;
+  text-align: center;
+  padding-bottom: 14rpx;
+  font-size: 28rpx;
+  color: var(--t3);
+}
+
+.ob-tab.on {
+  color: var(--t1);
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.ob-line {
+  margin: 12rpx auto 0;
+  width: 0;
+  height: 6rpx;
+  border-radius: 6rpx;
+  background: var(--t1);
+  transition: width 0.2s;
+}
+
+.ob-tab.on .ob-line {
+  width: 40rpx;
+}
+
+.ob-body {
+  padding: 190rpx 24rpx 0;
+}
+
+/* ---------- 步骤一 Hero ---------- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 0 40rpx;
+}
+
+.hero-logo { font-size: 118rpx; line-height: 1; }
+
+.hero-name {
+  margin-top: 20rpx;
+  font-size: 50rpx;
+  font-weight: 700;
+  letter-spacing: 8rpx;
+}
+
+.hero-sub {
+  margin-top: 12rpx;
+  font-size: 27rpx;
+  color: var(--t2);
+}
+
+.hero-slogan {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: var(--up);
+}
+
+/* ---------- 示例持仓 ---------- */
+.demo {
+  margin-top: 24rpx;
+  background: #F7F9F8;
+  border-radius: 18rpx;
+  padding: 24rpx;
+}
+
+.stock-ico {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 14rpx;
+  background: #E9EDEB;
+  color: var(--t2);
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.demo-meta {
+  display: flex;
+  margin-top: 20rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #EAEEEC;
+  font-size: 22rpx;
+  color: var(--t2);
+}
+
+.demo-meta text { flex: 1; }
+
+.demo-dark {
+  margin-top: 24rpx;
+  background: linear-gradient(150deg, #323232, #212121);
+  border-radius: 20rpx;
+  padding: 26rpx;
+  color: #fff;
+}
+
+.demo-dark-num {
+  font-size: 56rpx;
+  font-weight: 700;
+  margin-top: 6rpx;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-dark-grid {
+  display: flex;
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.12);
+}
+
+.demo-dark-grid .col { flex: 1; }
+
+.scale-arrow {
+  font-size: 30rpx;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0 16rpx;
+}
+
+/* ---------- chips ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 24rpx 0 16rpx;
+}
+
+.chip {
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: #F4F6F5;
+  color: var(--t2);
+  font-size: 24rpx;
+  margin: 0 14rpx 14rpx 0;
+}
+
+.chip.on {
+  background: rgba(31, 157, 107, 0.1);
+  color: var(--primary);
+  border: 1rpx solid rgba(31, 157, 107, 0.35);
+}
+
+/* ---------- 通用按钮 ---------- */
+.big-btn {
+  height: 100rpx;
+  line-height: 100rpx;
+}
+
+.big-btn.off {
+  background: #C9CFCC;
+  box-shadow: none;
+}
+
+.foot-link {
+  text-align: center;
+  font-size: 25rpx;
+  color: var(--t3);
+  padding: 30rpx 0 10rpx;
+}
+
+/* ---------- 步骤标题 ---------- */
+.step-head { padding: 0 8rpx 24rpx; }
+
+.step-badge {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #232323;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-title {
+  margin-top: 20rpx;
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.step-sub {
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  color: var(--t2);
+  line-height: 1.5;
+}
+
+/* ---------- 支出网格 ---------- */
+.exp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.exp-card {
+  width: 48.5%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 22rpx;
+  margin-bottom: 20rpx;
+  border: 2rpx solid transparent;
+  box-shadow: 0 4rpx 16rpx rgba(23, 43, 35, 0.05);
+}
+
+.exp-card.on { border-color: var(--primary); }
+
+.exp-card.add {
+  background: transparent;
+  border: 2rpx dashed #D6DCD9;
+  box-shadow: none;
+}
+
+.exp-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: #F4F6F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+
+.add-icon { color: var(--t3); font-weight: 300; }
+
+.radio {
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  border: 2rpx solid #D6DCD9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radio.on {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.tick { color: #fff; font-size: 20rpx; line-height: 1; }
+
+/* ---------- 滑块 ---------- */
+.slider-item { padding: 24rpx 0 8rpx; }
+
+.slider {
+  margin: 20rpx 0 0 -2rpx;
+  width: 100%;
+}
+
+/* ---------- 深色卡片百分比 ---------- */
+.pct-gold {
+  font-size: 64rpx;
+  font-weight: 700;
+  color: var(--gold-light);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* ---------- 逐年行 ---------- */
+.year-rows { margin-top: 20rpx; }
+
+.year-row {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.year-row:last-child { border-bottom: none; }
+
+.year-badge {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 18rpx;
+  background: #F4F6F5;
+  color: var(--t2);
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.more {
+  margin-top: 12rpx;
+  padding-top: 22rpx;
+  border-top: 1rpx solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t3);
+}
+
+.more-txt {
+  font-size: 25rpx;
+  line-height: 1;
+}
+
+/* ---------- 时间线 ---------- */
+.tl-rows { margin-top: 16rpx; }
+
+.tl-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.tl-row:last-child { border-bottom: none; }
+
+/* ---------- 底部固定条 ---------- */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 136rpx;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1rpx solid var(--line);
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+}
+
+.next-btn {
+  padding: 22rpx 36rpx;
+  border-radius: 999rpx;
+  background: #232323;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.next-btn.off {
+  background: #E5E8E7;
+  color: #A9B0AD;
+}
+
+.ob-space { height: 160rpx; }
+.ob-space.tall { height: 300rpx; }
+
+/* ---------- 自定义支出面板 ---------- */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 88;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 常驻 DOM，靠 class 切换拿到滑入动画 */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 89;
+  background: #FFFFFF;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 8rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.26s ease;
+}
+
+.sheet.open { transform: translateY(0); }
+
+.sheet-title {
+  padding: 30rpx 0 20rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.f-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+.f-row.f-col { display: block; }
+
+.f-col .f-label { display: block; margin-bottom: 18rpx; }
+
+.f-label {
+  width: 180rpx;
+  font-size: 27rpx;
+  color: var(--t2);
+  flex-shrink: 0;
+}
+
+.f-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: var(--t1);
+}
+
+.ph { color: #B9C0BC; }
+
+.icon-chip { font-size: 30rpx; }
+
+.sheet-btn {
+  margin-top: 30rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  border-radius: 20rpx;
+  background: linear-gradient(90deg, #2FB57E, #1F9D6B);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.sheet-cancel {
+  margin-top: 16rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--t2);
+}

@@ -1,0 +1,98 @@
+.page { padding: 24rpx; }
+
+/* ---------- 标题 ---------- */
+.title-row {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 8rpx 24rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+/* ---------- 字段标题 ---------- */
+.label {
+  padding: 28rpx 8rpx 16rpx;
+  font-size: 25rpx;
+  color: var(--t2);
+}
+
+.req { color: var(--up); margin-right: 4rpx; }
+
+/* ---------- 交易类型：四等分排开 ---------- */
+.types { display: flex; }
+
+.type {
+  flex: 1;
+  min-width: 0;
+  height: 88rpx;
+  margin-right: 16rpx;
+  border-radius: 14rpx;
+  background: #FFFFFF;
+  border: 1rpx solid #E7EBE9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 27rpx;
+  color: var(--t1);
+}
+
+.type:last-child { margin-right: 0; }
+
+/* 选中态：暖橙浅底 + 橙字，与「分红口径」胶囊同一套语言 */
+.type.on {
+  background: #FDF1E2;
+  border-color: var(--orange);
+  color: var(--orange);
+  font-weight: 600;
+}
+
+/* ---------- 输入框 ---------- */
+.field {
+  height: 96rpx;
+  padding: 0 24rpx;
+  border-radius: 14rpx;
+  background: #FFFFFF;
+  font-size: 30rpx;
+  color: var(--t1);
+}
+
+/* picker 里是 view，需要自己把文字垂直居中 */
+.field.view {
+  display: flex;
+  align-items: center;
+}
+
+.ph { color: #C4C9CE; }
+
+.price-row {
+  display: flex;
+  align-items: center;
+}
+
+.unit {
+  margin-left: 20rpx;
+  font-size: 24rpx;
+  color: var(--t3);
+  flex-shrink: 0;
+}
+
+/* ---------- 确认 ---------- */
+.bottom-space { height: 60rpx; }
+
+.confirm {
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  background: #232323;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.confirm:active { opacity: 0.88; }
+.confirm.off { opacity: 0.6; }

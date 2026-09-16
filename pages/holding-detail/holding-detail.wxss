@@ -1,0 +1,244 @@
+.cur-tip { margin-bottom: 24rpx; }
+
+.cur-link {
+  color: var(--orange);
+  font-weight: 500;
+  margin-left: 12rpx;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.code {
+  font-size: 34rpx;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.huge {
+  font-size: 62rpx;
+  font-weight: 700;
+  letter-spacing: -1rpx;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+/* ---------- 2x2 指标 ---------- */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.grid-cell {
+  width: 48.6%;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 26rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(23, 43, 35, 0.05);
+  display: flex;
+  flex-direction: column;
+  min-height: 190rpx;
+}
+
+/* ---------- 进度条 ---------- */
+.pbar {
+  height: 12rpx;
+  border-radius: 999rpx;
+  background: #EFF2F1;
+  overflow: hidden;
+}
+
+.pbar-in {
+  /* 宽度由内联的 --w 提供（0~100%） */
+  width: var(--w, 0%);
+  height: 100%;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #F0A24A, #E0892C);
+}
+
+/* ---------- 菜单 ---------- */
+.menu-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.menu-row:last-child { border-bottom: none; }
+
+.bottom-space { height: 60rpx; }
+
+/* ---------- 编辑持仓面板 ---------- */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 88;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 常驻 DOM，靠 class 切换拿到滑入动画 */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 89;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: #FFFFFF;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 8rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.26s ease;
+}
+
+.sheet.open { transform: translateY(0); }
+
+.sheet-title {
+  padding: 30rpx 0 20rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.f-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+/* 胶囊组换行时标签独占一行 */
+.f-row.f-col {
+  display: block;
+}
+
+.f-col .f-label { display: block; margin-bottom: 18rpx; }
+
+.f-label {
+  width: 180rpx;
+  font-size: 27rpx;
+  color: var(--t2);
+  flex-shrink: 0;
+}
+
+.f-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: var(--t1);
+}
+
+.f-picker {
+  font-size: 28rpx;
+  color: var(--t1);
+}
+
+.f-unit {
+  font-size: 23rpx;
+  color: var(--t3);
+  margin-left: 12rpx;
+}
+
+.ph { color: #B9C0BC; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8rpx 24rpx;
+  margin: 0 14rpx 12rpx 0;
+  border-radius: 999rpx;
+  background: #EFF2F1;
+  font-size: 24rpx;
+  color: var(--t2);
+}
+
+.chip.on {
+  background: rgba(31, 157, 107, 0.12);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* 分红税率：选中是实心橙底白字，与「成本口径」的绿字区分开 */
+.chip.tax.on {
+  background: var(--orange);
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.f-tip {
+  margin-top: 16rpx;
+  padding: 18rpx 22rpx;
+  background: #F7F9F8;
+  border-radius: 14rpx;
+  font-size: 23rpx;
+  color: var(--t3);
+  line-height: 1.5;
+}
+
+/* 简易开关 */
+.switch {
+  width: 84rpx;
+  height: 46rpx;
+  border-radius: 999rpx;
+  background: #D9DEDC;
+  padding: 4rpx;
+  transition: background 0.2s ease;
+}
+
+.switch.on { background: var(--primary); }
+
+/* 分红相关的开关用橙色：与「添加持仓」页的税率开关保持一致 */
+.switch.tax.on { background: var(--orange); }
+
+.switch-dot {
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transition: transform 0.2s ease;
+}
+
+.switch.on .switch-dot { transform: translateX(38rpx); }
+
+.sheet-btn {
+  margin-top: 30rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  border-radius: 20rpx;
+  background: linear-gradient(90deg, #2FB57E, #1F9D6B);
+  color: #FFFFFF;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.sheet-btn.off { opacity: 0.6; }
+
+.sheet-cancel {
+  margin-top: 16rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--t2);
+}

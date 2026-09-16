@@ -1,0 +1,561 @@
+.page { padding-bottom: 220rpx; }
+
+/* ---------- 卡片 ---------- */
+.card { margin-bottom: 24rpx; }
+
+/* 未选股时第 2、3 张卡整体置灰且不可点 */
+.locked {
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 26rpx;
+}
+
+/* 卡片标题前的步骤序号。刻意不叫 .num —— 全局 .num 是「等宽数字」工具类，
+   用同名会把 picked-code / 档案金额上的数字也套上这个黑圆底。 */
+.step-num {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #232323;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+
+/* ---------- 选项胶囊 ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.chip {
+  padding: 12rpx 28rpx;
+  margin: 0 16rpx 16rpx 0;
+  border-radius: 999rpx;
+  background: #EFF2F1;
+  color: var(--t2);
+  font-size: 26rpx;
+  line-height: 1.2;
+}
+
+.chip.on {
+  background: #232323;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.chip.sm {
+  padding: 10rpx 22rpx;
+  font-size: 24rpx;
+}
+
+/* 成本口径：选中是白底 + 深色描边 */
+.chip.sm.on {
+  background: #FFFFFF;
+  color: var(--t1);
+  border: 2rpx solid var(--t1);
+}
+
+/* 分红口径：选中是白底 + 橙色描边 + 橙字 */
+.chip.div.on {
+  background: #FFFFFF;
+  color: var(--orange);
+  border: 2rpx solid var(--orange);
+}
+
+/* 圆形问号 */
+.q {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 1rpx solid #D9DEDC;
+  color: var(--t3);
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-bottom: 16rpx;
+}
+
+/* 出现在标题行时不需要与胶囊对齐的下边距 */
+.q.inline { margin-bottom: 0; }
+
+/* ---------- 搜索 ---------- */
+.divider {
+  height: 1rpx;
+  background: var(--line);
+  margin: 10rpx 0 26rpx;
+}
+
+.search-input {
+  height: 64rpx;
+  font-size: 32rpx;
+  color: var(--t1);
+}
+
+.ph { color: #C4C9CE; }
+
+/* 搜索结果下拉：带边框的圆角容器，超出高度可滚动 */
+.results {
+  background: #FAFBFB;
+  border: 1rpx solid #EEF1F0;
+  border-radius: 16rpx;
+  max-height: 460rpx;
+  overflow-y: auto;
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 20rpx;
+  border-bottom: 1rpx solid #EEF1F0;
+}
+
+.result:last-child { border-bottom: none; }
+.result:active { background: #F2F5F3; }
+
+/* 左侧市场标签：固定最小宽度，保证下面各行的代码竖直对齐 */
+.result-tag {
+  min-width: 64rpx;
+  padding: 6rpx 14rpx;
+  font-size: 21rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.result-code {
+  width: 140rpx;
+  margin-left: 14rpx;
+  font-size: 24rpx;
+  color: var(--t2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.result-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 26rpx;
+  color: var(--t1);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 行尾标的类型（沪A / 港股 / 美股 / 基金），用来区分同代码不同市场的标的 */
+.result-type {
+  margin-left: 16rpx;
+  flex-shrink: 0;
+  font-size: 21rpx;
+  color: var(--t3);
+}
+.no-result {
+  margin-top: 24rpx;
+  padding: 60rpx 0;
+  text-align: center;
+  font-size: 25rpx;
+  color: var(--t3);
+}
+
+/* 已选中：一行灰底条，市场徽标 + 代码 + 名称，右侧重选 */
+.picked {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 24rpx;
+  background: #F2F4F3;
+  border-radius: 16rpx;
+}
+
+.picked-tag { flex-shrink: 0; }
+
+/* 代码列定宽，换标的时名称左边缘不会左右跳 */
+.picked-code {
+  width: 150rpx;
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--t1);
+  flex-shrink: 0;
+}
+
+.picked-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: var(--t1);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.repick {
+  margin-left: 12rpx;
+  padding: 8rpx 0 8rpx 12rpx;
+  font-size: 25rpx;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* ---------- 已选标的：实时行情 + 分红档案 ---------- */
+/* 不再套一层描边卡片，行情与档案直接长在「选择股票」卡片里 */
+.detail { margin-top: 26rpx; }
+
+.detail-note {
+  padding: 0 0 8rpx;
+  font-size: 24rpx;
+  color: var(--t3);
+  line-height: 1.5;
+}
+
+.quote {
+  display: flex;
+  align-items: flex-end;
+}
+
+.quote-label {
+  font-size: 23rpx;
+  color: var(--t3);
+}
+
+.quote-price {
+  margin-top: 8rpx;
+  font-size: 46rpx;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.quote-right {
+  text-align: right;
+  padding-bottom: 4rpx;
+}
+
+.quote-change {
+  display: block;
+  font-size: 24rpx;
+}
+
+.quote-change + .quote-change { margin-top: 6rpx; }
+
+/* 涨红跌绿：与持仓页同一套配色 */
+.up { color: var(--up); }
+.down { color: var(--primary); }
+.flat { color: var(--t2); }
+
+.quote-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+
+/* 分红档案入口：默认收起，点一下才展开历年方案 */
+.arc-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+  font-size: 25rpx;
+  color: var(--orange);
+}
+
+.arc-arrow { margin-left: 8rpx; }
+
+.arc-row {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+}
+
+/* 行之间用上边框分隔，末行不会留一条悬空的线 */
+.arc-row + .arc-row { border-top: 1rpx solid var(--line); }
+
+.arc-year {
+  width: 152rpx;
+  flex-shrink: 0;
+  padding-right: 12rpx;
+}
+
+.arc-now {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 19rpx;
+  color: var(--primary);
+}
+
+/* 已公告但还没除权的方案：用橙色区别于「最近一次」 */
+.arc-pending {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 19rpx;
+  color: var(--orange);
+}
+
+/* 行情来源与手动刷新 */
+.quote-source {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0 22rpx;
+}
+
+/* ---------- 表单 ---------- */
+.label {
+  font-size: 25rpx;
+  color: var(--t2);
+  margin-bottom: 14rpx;
+}
+
+.req { color: var(--up); margin-right: 4rpx; }
+
+.field {
+  height: 56rpx;
+  font-size: 30rpx;
+  color: var(--t1);
+}
+
+.field.full { width: 100%; }
+
+.two-col {
+  display: flex;
+}
+
+.col-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.col-item:first-child { margin-right: 32rpx; }
+
+.cost-row {
+  display: flex;
+  align-items: center;
+}
+
+/* 负成本：金额前的橙色负号 */
+.cost-minus {
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--orange);
+  margin-right: 2rpx;
+  flex-shrink: 0;
+}
+
+.unit {
+  font-size: 23rpx;
+  color: var(--t3);
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+/* 负成本勾选 */
+.check-row {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 18rpx 20rpx;
+  background: #F7F9F8;
+  border-radius: 14rpx;
+}
+
+.checkbox {
+  width: 30rpx;
+  height: 30rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid #D6DCD9;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox.on {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.tick { color: #FFFFFF; font-size: 20rpx; line-height: 1; }
+
+.check-label {
+  font-size: 23rpx;
+  color: var(--t3);
+  line-height: 1.4;
+}
+
+/* ---------- 分红口径结果 ---------- */
+.div-value {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--orange);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 「查看计算明细」：居中弱化入口 */
+.calc-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  color: var(--t3);
+}
+
+.calc-link .chev.right {
+  margin-top: 0;
+  transform: rotate(-45deg);
+}
+
+/* ---------- 分红税率 ---------- */
+/* 选中的税率胶囊是实心橙底白字，与「分红口径」的白底橙字刻意区分开 */
+.chip.tax.on {
+  background: var(--orange);
+  color: #FFFFFF;
+  border: none;
+  font-weight: 500;
+}
+
+.tax-tip {
+  padding: 4rpx 0 0;
+  font-size: 23rpx;
+  line-height: 1.6;
+  color: var(--t3);
+}
+
+/* 预测分红扣税开关 */
+.tax-switch {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 22rpx 24rpx;
+  background: var(--warm-bg);
+  border-radius: 16rpx;
+}
+
+.switch {
+  width: 84rpx;
+  height: 48rpx;
+  padding: 4rpx;
+  border-radius: 999rpx;
+  background: #D8DEDB;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.switch.on { background: var(--orange); }
+
+.switch-dot {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transition: transform 0.2s ease;
+}
+
+.switch.on .switch-dot { transform: translateX(36rpx); }
+
+.tip-bar {
+  margin-top: 20rpx;
+  padding: 20rpx 22rpx;
+  background: #F7F9F8;
+  border-radius: 14rpx;
+  font-size: 23rpx;
+  color: var(--t3);
+  line-height: 1.5;
+}
+
+.bottom-space { height: 40rpx; }
+
+/* ---------- 底部确认 ---------- */
+.confirm-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 55;
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1rpx solid var(--line);
+}
+
+.confirm {
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  border-radius: 24rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #C4C9CE;
+  background: transparent;
+}
+
+.confirm.on {
+  background: #232323;
+  color: #FFFFFF;
+}
+
+.confirm.off { background: #C9CFCC; color: #FFFFFF; }
+
+/* ---------- 自定义标的面板 ---------- */
+.sheet-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 88;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.22s ease;
+}
+
+.sheet-mask.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* 常驻 DOM，靠 class 切换拿到滑入动画 */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 89;
+  background: #FFFFFF;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 8rpx 32rpx calc(24rpx + env(safe-area-inset-bottom));
+  transform: translateY(110%);
+  transition: transform 0.26s ease;
+}
+
+.sheet.open { transform: translateY(0); }
+
+.sheet-title {
+  padding: 30rpx 0 20rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.cf-body { padding-bottom: 16rpx; }
+
+.sheet-cancel {
+  margin-top: 16rpx;
+  padding: 24rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  color: var(--t2);
+}

@@ -1,0 +1,195 @@
+<view class="page-flat">
+  <!-- 未登录守卫 -->
+  <login-guard
+    wx:if="{{guest}}"
+    icon="🥇"
+    title="登录后进入我的"
+    desc="登录即可管理账户、生活支出与数据口径"
+  />
+
+  <view wx:elif="{{loading}}" class="card empty">
+    <view class="empty-emoji">🥇</view>
+    <view class="empty-title">正在加载账户信息…</view>
+  </view>
+
+  <block wx:else>
+  <!-- 用户头 -->
+  <view class="dark-card user-card">
+    <view class="between">
+      <view class="row">
+        <view class="avatar">{{user.avatar}}</view>
+        <view class="ml16">
+          <view class="h3">{{user.nickName}}</view>
+          <view class="tiny dim-on-dark mt8">{{user.slogan}}</view>
+        </view>
+      </view>
+      <view class="pro" bindtap="onPro">{{member.badge}}</view>
+    </view>
+  </view>
+
+  <!-- 会员：档位 / 到期时间 / 入口 -->
+  <view class="card mt20 pro-row" bindtap="onPro">
+    <view class="row">
+      <text class="diamond">◆</text>
+      <text class="mid bold ml12">{{member.tierName}}</text>
+      <text wx:if="{{member.isPaid}}" class="tiny dim ml12">· {{member.expiresAt}} 到期</text>
+      <text wx:else class="tiny dim ml12">· {{member.tip}}</text>
+    </view>
+    <view class="row">
+      <text wx:if="{{member.cta}}" class="member-cta">{{member.cta}}</text>
+      <text class="dim">›</text>
+    </view>
+  </view>
+
+  <!-- 生活支出 -->
+  <view class="card mt20" bindtap="goExpense">
+    <view class="between">
+      <view class="row">
+        <view class="icon-box icon-soft-green">🎯</view>
+        <view class="ml12">
+          <view class="h3">生活支出</view>
+          <view class="tiny dim mt8">看看分红能替你付哪些账单</view>
+        </view>
+      </view>
+      <text class="dim">›</text>
+    </view>
+    <view class="exp-meta">
+      <view class="col flex1">
+        <text class="h3 num">{{monthExpenseText}}</text>
+        <text class="tiny dim mt8">每月支出</text>
+      </view>
+      <view class="col flex1">
+        <text class="h3 num">{{expenseCount}}</text>
+        <text class="tiny dim mt8">支出项</text>
+      </view>
+      <view class="col flex1">
+        <text class="h3 num">{{yearExpenseText}}</text>
+        <text class="tiny dim mt8">每年支出</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置组 1 -->
+  <view class="card-flat mt24">
+    <view
+      wx:for="{{group1}}"
+      wx:key="key"
+      class="menu-row {{item.key === 'phone' && !item.bound ? 'bindable' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onItem"
+    >
+      <view class="icon-box icon-soft-gray">{{item.icon}}</view>
+      <view class="flex1 ml16 mid">{{item.name}}</view>
+      <text wx:if="{{item.value}}" class="small dim">{{item.value}}</text>
+      <text class="dim ml8">›</text>
+
+      <!-- 还没绑定手机号：整行盖一个透明按钮（只有 button 才能拉起 getPhoneNumber 授权） -->
+      <button
+        wx:if="{{item.key === 'phone' && !item.bound}}"
+        class="row-bind"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="onBindPhone"
+      ></button>
+    </view>
+  </view>
+
+  <!-- 设置组 2 -->
+  <view class="card-flat mt24">
+    <view
+      wx:for="{{group2}}"
+      wx:key="key"
+      class="menu-row"
+      data-key="{{item.key}}"
+      bindtap="onItem"
+    >
+      <view class="icon-box icon-soft-gray">{{item.icon}}</view>
+      <view class="flex1 ml16 mid">{{item.name}}</view>
+      <text class="dim">›</text>
+    </view>
+  </view>
+
+  <!-- 退出 -->
+  <view class="card mt24 logout {{submitting ? 'off' : ''}}" bindtap="onLogout">
+    {{submitting ? '退出中…' : '退出登录'}}
+  </view>
+  <view class="destroy" bindtap="onDestroyAccount">注销账号</view>
+  <!-- 备案号：填了 utils/mock.js 的 appInfo.icpNo 才显示，留空整行不渲染 -->
+  <view wx:if="{{icpNo}}" class="icp">{{icpNo}}</view>
+
+  <view class="bottom-space"></view>
+  </block>
+
+  <!-- ============ 显示货币 ============ -->
+  <view class="sheet-mask {{curOpen ? 'show' : ''}}" bindtap="closeCurrency"></view>
+  <view class="sheet {{curOpen ? 'open' : ''}}">
+    <view class="sheet-title">显示货币</view>
+    <view
+      wx:for="{{curList}}"
+      wx:key="code"
+      class="sheet-item {{curCode === item.code ? 'on' : ''}}"
+      data-code="{{item.code}}"
+      bindtap="onPickCurrency"
+    >
+      <text class="flex1">{{item.label}}</text>
+      <text wx:if="{{curCode === item.code}}" class="sheet-tick">✓</text>
+    </view>
+    <view class="sheet-note">切换后全 App 的金额会按汇率换算展示，录入的支出金额仍按人民币保存。</view>
+    <view class="sheet-cancel" bindtap="closeCurrency">取消</view>
+  </view>
+
+  <!-- ============ 多账户管理 ============ -->
+  <view class="sheet-mask {{accOpen ? 'show' : ''}}" bindtap="closeAccounts"></view>
+  <view class="sheet {{accOpen ? 'open' : ''}}">
+    <view class="sheet-title">多账户管理</view>
+    <view
+      wx:for="{{accounts}}"
+      wx:key="id"
+      class="acc-row {{activeAccId === item.id ? 'on' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onPickAccount"
+    >
+      <view class="acc-radio">{{activeAccId === item.id ? '●' : '○'}}</view>
+      <view class="flex1 ml16">
+        <view class="mid bold">{{item.name}}</view>
+        <view class="tiny dim mt8">{{item.broker}} · {{item.holder}}</view>
+      </view>
+      <text class="acc-del" catchtap="onRemoveAccount" data-id="{{item.id}}">删除</text>
+    </view>
+
+    <view class="sheet-btn" bindtap="openAddAccount">＋ 新增账户</view>
+    <view class="sheet-cancel" bindtap="closeAccounts">取消</view>
+  </view>
+
+  <!-- ============ 新增账户 ============ -->
+  <view class="sheet-mask {{addAccOpen ? 'show' : ''}}" bindtap="closeAddAccount"></view>
+  <view class="sheet {{addAccOpen ? 'open' : ''}}">
+    <view class="sheet-title">新增账户</view>
+
+    <view class="f-row">
+      <text class="f-label">账户名称</text>
+      <input
+        class="f-input"
+        placeholder="如 华泰证券"
+        placeholder-class="ph"
+        value="{{accForm.name}}"
+        data-field="name"
+        bindinput="onAccInput"
+      />
+    </view>
+
+    <view class="f-row">
+      <text class="f-label">券商 / 平台</text>
+      <input
+        class="f-input"
+        placeholder="可选"
+        placeholder-class="ph"
+        value="{{accForm.broker}}"
+        data-field="broker"
+        bindinput="onAccInput"
+      />
+    </view>
+
+    <view class="sheet-btn" bindtap="onSubmitAccount">确定</view>
+    <view class="sheet-cancel" bindtap="closeAddAccount">取消</view>
+  </view>
+</view>
