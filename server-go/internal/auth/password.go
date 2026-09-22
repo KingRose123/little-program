@@ -20,7 +20,7 @@ import (
 /*
 密码哈希：必须与旧 Node 版逐位兼容。
 
-旧版（server/src/account.js）用的是：
+旧版（server/src/account.js，该文件已随 Node 版后端一起移除）用的是：
     salt = crypto.randomBytes(16).toString('hex')        // 32 个 hex 字符
     crypto.scrypt(password, salt, 32)                    // 只显式给了 keylen
     'scrypt$' + salt + '$' + key.toString('hex')

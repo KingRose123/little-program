@@ -1,6 +1,7 @@
 // Package apperr 区分「可以告诉用户的错误」和「只能记日志的错误」。
 //
-// 旧 Node 版靠「抛出的对象上有没有 msg 字段」来做这个区分（见 routes.js 的 handle），
+// 旧 Node 版靠「抛出的对象上有没有 msg 字段」来做这个区分（见 routes.js 的 handle，
+// 该文件已随 Node 版后端一起移除），
 // 于是每个 catch 里都要写 `e.msg || e.message || '兜底文案'`，
 // 一旦有人抛了字符串或抛了非 Error 对象，用户看到的就是一句没用的兜底。
 //
