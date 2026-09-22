@@ -324,10 +324,27 @@ function dividendA(code, size) {
   })
 }
 
-// 港股：方案原文形如「每股派港币5.3元」
+/**
+ * 港股：方案原文有两种写法，必须分开认 ——
+ *   以港币宣派：「每股派港币0.024元」
+ *   以人民币宣派：「每股派人民币0.154元(相当于港币0.177元)」
+ *
+ * 后者在港股里非常常见（中资公司多按人民币记账，中国食品 00506 就是），
+ * 而原来只取「原文里第一个数字」，拿到的是**人民币**金额却当成本币（港币）用。
+ * 后果不是固定打几折，而是随当期汇率浮动，表现就是「股息率和市场公布的对不上、
+ * 而且怎么调税率都对不上」—— 因为错在基数本身。
+ *
+ * 所以优先取括号里的港币等值（公司公告的官方折算值），其次认「派港币X元」，
+ * 最后才退回第一个数字兜底。
+ */
 function toDividendHK(r) {
   const text = String(r.PLAN_EXPLAIN || '')
-  const m = text.match(/([\d]+(?:\.\d+)?)/)
+
+  const equivalent = text.match(/(?:相当于|折合|相等于)\s*港(?:币|元)\s*([\d]+(?:\.\d+)?)/)
+  const declaredHkd = text.match(/派\s*港(?:币|元)\s*([\d]+(?:\.\d+)?)/)
+  const fallback = text.match(/([\d]+(?:\.\d+)?)/)
+
+  const m = equivalent || declaredHkd || fallback
   const dps = m ? num(m[1]) : 0
   if (!(dps > 0)) return null
 
@@ -466,6 +483,81 @@ function fetchFund(code) {
   )
 }
 
+/* ---------------- 汇率 ----------------
+ * 港币 / 美元兑离岸人民币（CNH）。用离岸价是因为投资者的视角就是它，
+ * 而且东财只提供 CNH（没有在岸 CNY 的行情）。
+ * 返回值是「1 单位外币 = 多少人民币」：{ CNY: 1, HKD: 0.8534, USD: 6.6953 }。
+ */
+const FX_SECID = { HKD: '133.HKDCNH', USD: '133.USDCNH' }
+
+function fetchFx() {
+  const codes = Object.keys(FX_SECID)
+
+  return Promise.all(
+    codes.map((c) =>
+      request(HOST.quote + '/api/qt/stock/get?secid=' + FX_SECID[c] + '&fields=f43,f59')
+        .then((res) => {
+          const d = (res && res.data) || {}
+          // f43 是放大过的整数，f59 是小数位数
+          const price = Number(d.f43) / Math.pow(10, Number(d.f59) || 0)
+          return price > 0 ? { code: c, price: price } : null
+        })
+        .catch(() => null)
+    )
+  ).then((arr) => {
+    const out = { CNY: 1 }
+    arr.forEach((r) => {
+      if (r) out[r.code] = r.price
+    })
+    return out
+  })
+}
+
+/**
+ * 按公告原文再校正一次港股的每股派息。
+ *
+ * 服务端有可能还是「取方案原文里第一个数字」的老口径：以人民币宣派的港股
+ * （原文形如「每股派人民币0.154元(相当于港币0.177元)」）会被低估一截，
+ * 偏差还随当期汇率浮动，表现就是「股息率和市场公布的对不上」。
+ *
+ * 服务端返回里带着 planText（公告原文），所以客户端能自己重解析一遍。
+ * 放在这一层是因为 dividend / detail / details 三条通道取回的分红都经过它，
+ * 上游（持仓、详情、榜单、档案）不用各自处理。
+ * 服务端更新后两边结果一致，这里自然成为空操作 —— 幂等，不会互相打架。
+ */
+function fixHkDividend(dividend) {
+  if (!dividend || !dividend.list || !dividend.list.length) return dividend
+
+  let changed = false
+  const list = dividend.list.map((r) => {
+    const m = String((r && r.planText) || '').match(
+      /(?:相当于|折合|相等于)\s*港(?:币|元)\s*([\d]+(?:\.\d+)?)/
+    )
+    if (!m) return r
+    const hkd = num(m[1])
+    if (!(hkd > 0) || hkd === r.dps) return r
+    changed = true
+    return Object.assign({}, r, { dps: hkd })
+  })
+
+  return changed ? Object.assign({}, dividend, { list: list }) : dividend
+}
+
+// 档案挂在 detail / details 的返回值里，配套两个包装
+function fixHkDetail(d) {
+  if (!d) return d
+  return Object.assign({}, d, { dividend: fixHkDividend(d.dividend) })
+}
+
+function fixHkDetailMap(map) {
+  if (!map) return map
+  const out = {}
+  Object.keys(map).forEach((k) => {
+    out[k] = fixHkDetail(map[k] || {})
+  })
+  return out
+}
+
 function fetchDividend(stock, opts) {
   const s = stock || {}
   const size = (opts && opts.size) || 10
@@ -476,7 +568,7 @@ function fetchDividend(stock, opts) {
         .request('/api/dividend?' + qs({ code: s.code, market: s.market, size }))
         .then((r) => (r.data === undefined ? null : r.data)),
     () => directDividend(s, opts)
-  )
+  ).then(fixHkDividend)
 }
 
 function fetchDetail(stock) {
@@ -488,7 +580,7 @@ function fetchDetail(stock) {
         .request('/api/detail?' + qs({ code: s.code, market: s.market, secid: s.secid }))
         .then((r) => r.data || { quote: null, dividend: null }),
     () => directDetail(s)
-  )
+  ).then(fixHkDetail)
 }
 
 /* ================= 批量：一次请求拿齐多只标的 =================
@@ -560,7 +652,7 @@ function fetchDetails(list) {
         })
         return out
       })
-  )
+  ).then(fixHkDetailMap)
 }
 
 module.exports = {
@@ -574,5 +666,6 @@ module.exports = {
   fetchDetail,
   fetchQuotes,
   fetchDetails,
+  fetchFx,
   batchKey
 }

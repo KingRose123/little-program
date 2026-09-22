@@ -257,7 +257,8 @@ Page({
       divModeIndex: 3,
       divTip: DIV_TIPS[3],
       customDividend: cf.dps,
-      dividendText: this.data.symbol + util.money(dps, 4)
+      // 手填的每股派息是**本币**口径，预览也用本币符号，和下面的输入框一致
+      dividendText: api.nativeSymbol(m.key || 'A') + util.money(dps, 4)
     })
     this.applyDefaultTax(m.key || 'A')
     this.clearDetail('自定义标的：无行情与分红档案，分红按手填每股派息计算')
@@ -437,12 +438,14 @@ Page({
 
   refreshDividend() {
     const idx = this.data.divModeIndex
+    // 手填的每股派息是**本币**口径，预览跟着用本币符号（不是显示货币）
+    const nativeSym = api.nativeSymbol((this.data.picked && this.data.picked.market) || 'A')
 
     // 自定义口径：直接用手填值
     if (idx === 3) {
       const v = Number(this.data.customDividend)
       this.setData({
-        dividendText: v > 0 ? this.data.symbol + util.money(v, 4) : '--',
+        dividendText: v > 0 ? nativeSym + util.money(v, 4) : '--',
         dividendEmpty: !(v > 0)
       })
       return
@@ -497,7 +500,11 @@ Page({
       taxIndex,
       taxCustom: taxIndex === customIndex,
       taxCustomRate: taxIndex === customIndex ? String(rate) : '',
-      taxTip: (this.data.taxTips || {})[market] || (this.data.taxTips || {}).A || ''
+      taxTip: (this.data.taxTips || {})[market] || (this.data.taxTips || {}).A || '',
+      // 顺便把该市场的本币带下来：成本、每股派息这些输入框的单位要跟着市场换
+      // （港股填港币、美股填美元，折成人民币是入库时统一做的）
+      nativeName: api.nativeName(market),
+      nativeSymbol: api.nativeSymbol(market)
     })
   },
 

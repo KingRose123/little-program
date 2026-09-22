@@ -151,7 +151,7 @@
       <view class="acc-radio">{{activeAccId === item.id ? '●' : '○'}}</view>
       <view class="flex1 ml16">
         <view class="mid bold">{{item.name}}</view>
-        <view class="tiny dim mt8">{{item.broker}} · {{item.holder}}</view>
+        <view class="tiny dim mt8">{{item.broker}} · {{item.holder}} · {{item.holdingCount}} 只持仓</view>
       </view>
       <text class="acc-del" catchtap="onRemoveAccount" data-id="{{item.id}}">删除</text>
     </view>

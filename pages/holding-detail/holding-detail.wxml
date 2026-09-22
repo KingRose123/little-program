@@ -162,13 +162,13 @@
       <input
         class="f-input"
         type="digit"
-        placeholder="每股成本，可为负"
+        placeholder="每股成本，可为负（{{h.nativeCurrencyName}}）"
         placeholder-class="ph"
         value="{{form.cost}}"
         data-field="cost"
         bindinput="onFormInput"
       />
-      <text class="f-unit">/股</text>
+      <text class="f-unit">{{h.nativeCurrencyName}}/股</text>
     </view>
 
     <view class="f-row f-col">
@@ -219,7 +219,7 @@
         wx:if="{{form.divModeIndex === 3}}"
         class="f-input mt20"
         type="digit"
-        placeholder="请输入每股派息（元）"
+        placeholder="请输入每股派息（{{h.nativeCurrencyName}}）"
         placeholder-class="ph"
         value="{{form.customDividend}}"
         bindinput="onFormCustomDividend"

@@ -12,7 +12,7 @@
 
   <!-- 搜索 -->
   <view class="search mt24" bindtap="onSearch">
-    <text class="search-icon">🔍</text>
+    <view class="search-icon">🔍</view>
     <text class="search-ph">搜索股票代码 / 名称 / 分红方案</text>
   </view>
 
@@ -83,7 +83,7 @@
   <view class="search-panel {{searchOpen ? 'open' : ''}}">
     <view class="sp-bar">
       <view class="sp-box">
-        <text class="search-icon">🔍</text>
+        <view class="search-icon">🔍</view>
         <input
           class="sp-input"
           focus="{{searchOpen}}"

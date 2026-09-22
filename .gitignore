@@ -1,14 +1,65 @@
-# Windows
+# ===================================================================
+# 收息佬 · 仓库根忽略规则
+#
+# 这个仓库包含三部分源码：
+#   pages/ utils/ components/ custom-tab-bar/ app.* → 微信小程序
+#   app/                                            → React Native App
+#   server-go/                                      → Go 后端（线上跑的是这个）
+#
+# app/ 与 server-go/ 各自还有自己的 .gitignore，两者会叠加生效。
+# 这里只放"跨子项目"和"仓库根"的规则。
+# ===================================================================
+
+# ---------- Windows ----------
 [Dd]esktop.ini
 Thumbs.db
 $RECYCLE.BIN/
 
-# macOS
+# ---------- macOS ----------
 .DS_Store
 .fseventsd
 .Spotlight-V100
 .TemporaryItems
 .Trashes
 
-# Node.js
+# ---------- 依赖 ----------
 node_modules/
+
+# ---------- 构建产物 ----------
+# 判据是「能不能由源码重新生成」。能，就不该进版本库：
+# 它们体积大（本仓库曾积到 2.2 GB）、每次构建都变，提交只会淹没真正的改动。
+*.apk
+*.aab
+*.ipa
+build/
+.gradle/
+.expo/
+dist/
+
+# ---------- 打包与发布产物 ----------
+# 服务器源码包、发布用的 APK 等，属于「制品」而非「源码」
+*.tar.gz
+*.tgz
+*.zip
+xiji-*-release.apk
+
+# ---------- 运行日志 ----------
+*.log
+*.err
+logcat.txt
+
+# ---------- 密钥与凭据（绝对不能进版本库）----------
+# 说明：release.keystore 一旦泄漏，任何人都能签出与你同签名的包；
+# 一旦丢失，已上架的 App 将再也无法更新。它只该存在于本机与安全备份里。
+*.keystore
+*.jks
+*.pem
+*.p12
+.env
+.env.local
+.env.*.local
+
+# ---------- 编辑器 ----------
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,74 @@
+# 自建服务器上的部署编排。
+#
+# 三个服务，按需要取舍：
+#   api    必选，Go 后端
+#   mysql  如果服务器上已有 MySQL，把这段删掉，改 .env 里的连接信息即可
+#   caddy  负责 HTTPS。它自动申请并续期证书，比手工配 Nginx + certbot 省事得多
+#
+# 用法：
+#   cp .env.example .env && vi .env
+#   docker compose up -d --build
+
+services:
+  api:
+    build: .
+    image: xiji-api:latest
+    container_name: xiji-api
+    restart: unless-stopped
+    env_file: .env
+    # 只绑到本机回环：外网一律经 Caddy 进来，
+    # 避免有人绕开 HTTPS 直接访问明文端口。
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  mysql:
+    image: mysql:8.0
+    container_name: xiji-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      # 单条 SQL 包大小：影子表按 200 行一批拼 INSERT，
+      # 默认的 4MB 在大持仓用户上有可能不够。
+      - --max-allowed-packet=16M
+      # 慢查询留个底，用户反馈「打开很慢」时能直接查到是哪条
+      - --slow-query-log=1
+      - --long-query-time=1
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请先设置 MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-xiji}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: xiji-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data      # 证书存这里，删了这个卷等于重新申请一次证书
+      - caddy-config:/config
+    depends_on:
+      - api
+
+volumes:
+  mysql-data:
+  caddy-data:
+  caddy-config:

@@ -203,9 +203,11 @@ Page({
       taxTip: (this.data.taxTips || {})[h.market] || '',
       form: {
         shares: String(h.shares),
-        cost: String(h.cost),
+        // 录入面板按**本币**回显：用户当初按本币填，重新打开就该看到同一个数
+        // （h.cost 存的是折算后的人民币，直接用会让港股/美股显示成另一个数）
+        cost: String(h.costNative === undefined ? h.cost : h.costNative),
         buyDate: h.buyDate || '',
-        fee: h.fee ? String(h.fee) : '',
+        fee: h.feeNative ? String(h.feeNative) : '',
         costModeIndex,
         divModeIndex,
         customDividend: '',

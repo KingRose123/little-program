@@ -23,6 +23,9 @@ const cloud = require('./cloud.js')
 
 const STATE_KEY = 'appState'
 
+// 与 mock.accounts 里的第一个账户保持一致：老数据没有 accountId 时都归到它
+const DEFAULT_ACCOUNT = 'acc-main'
+
 // 需要跟着账号走的设置项（其余如 isLogin / hasOnboarded 属于本机状态，不上云）
 const SETTING_KEYS = [
   'displayCurrency',
@@ -31,7 +34,10 @@ const SETTING_KEYS = [
   'accounts',
   'activeAccountId',
   // 会员档位与到期时间：本来就属于账号，换设备登录后要能带过去
-  'membership'
+  'membership',
+  // 币种口径修正的版本标记：它是「这份数据已经折算过了」的凭据，必须跟着账号走。
+  // 只存本机的话，App 与小程序会各折一次，等于把汇率平方，港美股数字会离谱地小。
+  'nativeCurrencyFix'
 ]
 
 // 改造前分散存储的键，只在首次升级时用来搬迁数据
@@ -47,6 +53,44 @@ const PUSH_DEBOUNCE = 1200
 
 let state = null
 let pushTimer = null
+let migrated = false
+
+/* ---------------- 多账户：持仓按账户分开记账 ----------------
+ * 账户列表本身由 api.js 管（settings 里的 accounts / activeAccountId），
+ * store 只关心「当前是哪个账户」：每条持仓都带 accountId，读的时候按它过滤 ——
+ * 切到另一个账户看到的就是另一套持仓，不会几个账户共用一份。
+ */
+let accountId = null
+
+function defaultAccountId() {
+  const list = wx.getStorageSync('accounts')
+  if (list instanceof Array && list.length && list[0] && list[0].id) return String(list[0].id)
+  return DEFAULT_ACCOUNT
+}
+
+function currentAccountId() {
+  if (accountId) return accountId
+
+  const saved = String(wx.getStorageSync('activeAccountId') || '')
+  const list = wx.getStorageSync('accounts')
+  const ids = (list instanceof Array ? list : []).map((a) => String((a && a.id) || ''))
+
+  // 存下来的那个 id 可能已经不在账户列表里了（老数据，或账号合并后换了账户体系）。
+  // 继续用它的话，持仓会因为「不属于任何已列出的账户」而一条都显示不出来 ——
+  // 页面上看着就像数据被清空了。这时回落到第一个账户最稳妥。
+  if (saved && ids.indexOf(saved) === -1) {
+    accountId = ids[0] || DEFAULT_ACCOUNT
+    return accountId
+  }
+
+  accountId = saved || defaultAccountId()
+  return accountId
+}
+
+// 切账户 / 删账户时由 api.js 调一下，免得这里一直用旧值
+function setAccountId(id) {
+  accountId = String(id || '')
+}
 
 /* ---------------- 基础工具 ---------------- */
 
@@ -80,7 +124,33 @@ function ensureState() {
   const local = readLocal()
   state = local || buildInitialState()
   if (!local) persist()
+
+  // 老版本没有账户概念，持仓上都没有 accountId —— 升级时补一次
+  if (!migrated) {
+    migrated = true
+    migrateAccountId()
+  }
   return state
+}
+
+/**
+ * 老持仓统一归到第一个账户（用户看到的还是「原来那些持仓」），
+ * 之后新增的持仓都带上当前账户 id，切换账户各看各的。
+ */
+function migrateAccountId() {
+  const s = ensureState()
+  const fallback = defaultAccountId()
+  let changed = false
+
+  const holdings = asArray(s.holdings).map((h) => {
+    if (h && h.accountId) return h
+    changed = true
+    return Object.assign({}, h, { accountId: fallback })
+  })
+
+  if (!changed) return
+  state = Object.assign({}, s, { holdings })
+  persist()
 }
 
 /**
@@ -143,24 +213,61 @@ function applySettings(bag) {
 
 /* ---------------- 持仓：同步读（签名与改造前完全一致） ---------------- */
 
-function allRaw() {
-  return ensureState().holdings
+// 全量：写操作一定基于它，否则改一个账户会把其他账户的持仓弄丢
+function allRows() {
+  return asArray(ensureState().holdings)
 }
 
+// 对外只读当前账户的持仓 —— 切账户后看到的就是另一个账户的账
+function allRaw() {
+  const id = currentAccountId()
+  return allRows().filter((h) => String((h && h.accountId) || '') === id)
+}
+
+// 按 id 取单只持仓：同样只认当前账户的 ——
+// 别的账户即便知道 id 也取不到（详情页不给看，也不给改）
 function getRaw(id) {
   return allRaw().filter((h) => h.id === id)[0] || null
+}
+
+/* ---------------- 汇率注入 ----------------
+ * 快照里的本币金额都是按「记账汇率」折成人民币存的，那个汇率是固定桥梁，
+ * 不能动。这里由 api 层注入一个**重估系数**（实时汇率 ÷ 记账汇率），
+ * 供 decorate 把「当下与未来的价值」按最新汇率重算。
+ *
+ * store 是纯计算层，不反向依赖 api，所以用注入而不是 require；
+ * 没注入（或拿不到实时汇率）时系数为 1，行为与从前完全一致。
+ */
+let fxProvider = null
+
+function setFxProvider(fn) {
+  fxProvider = typeof fn === 'function' ? fn : null
+}
+
+function fxOf(market) {
+  if (!fxProvider) return 1
+  const v = Number(fxProvider(market))
+  return v > 0 ? v : 1
 }
 
 // 给单只持仓补齐派生字段，页面只做展示
 function decorate(h, plan) {
   const rate = plan && plan.rate ? plan.rate : 1 // A股 1，港股 (1 - 税率)
-  const dividend = h.dps * h.shares * rate
-  const marketValue = h.price * h.shares
-  const costValue = h.cost * h.shares
+  // 重估系数：所有人民币金额都按**最新汇率**看一遍 —— 效果等同于
+  //「本质上是港元资产，人民币金额只是当下的折算值」。
+  //   市值、成本、已收分红、预测分红 → 都乘
+  //   息率 → 同一币种相除，系数约掉，不受汇率影响（这正是它该有的性质）
+  // 浮动盈亏 = 市值 − 成本，两边同乘一个系数，所以汇率变了也不会凭空
+  // 多出或吃掉盈亏 —— 这是「成本必须一起重估」的原因。
+  const fx = fxOf(h.market)
+  const received = h.received * fx
+  const dividend = h.dps * h.shares * rate * fx
+  const marketValue = h.price * h.shares * fx
+  const costValue = h.cost * h.shares * fx
   const priceYield = h.price ? (h.dps / h.price) * 100 : 0
   const costYield = h.cost ? (h.dps / h.cost) * 100 : 0
-  const netInvest = costValue - h.received
-  const remaining = netInvest - h.received
+  const netInvest = costValue - received
+  const remaining = netInvest - received
   const paybackYears = dividend > 0 ? remaining / dividend : 0
 
   return Object.assign({}, h, {
@@ -173,7 +280,8 @@ function decorate(h, plan) {
     remaining,
     paybackYears,
     // 回本进度 = 已收分红 / 总投入，收满即封顶 100%
-    paybackProgress: costValue ? Math.min(100, Math.round((h.received / costValue) * 100)) : 0
+    //（两边同口径，所以汇率变化不影响它）
+    paybackProgress: costValue ? Math.min(100, Math.round((received / costValue) * 100)) : 0
   })
 }
 
@@ -253,13 +361,26 @@ function updateHoldingById(id, patch) {
   if (!patchChanged(cur, patch)) return cur
 
   const merged = Object.assign({}, cur, patch)
-  commit({ holdings: allRaw().map((h) => (h.id === id ? merged : h)) })
+  commit({ holdings: allRows().map((h) => (h.id === id ? merged : h)) })
   return merged
 }
 
+// 新持仓一律记在当前账户名下（外面没传就补上）
 function appendHolding(record) {
-  commit({ holdings: allRaw().concat([record]) })
-  return record
+  const row = Object.assign({}, record, { accountId: record.accountId || currentAccountId() })
+  commit({ holdings: allRows().concat([row]) })
+  return row
+}
+
+/**
+ * 整份替换持仓（数据口径修正用，例如币种折算迁移）。
+ * 必须走 commit：它负责标脏并排队上云；绕过它直接写 storage 的话，
+ * 云端那份旧口径的数据下次启动又会被拉回来盖掉，等于白修。
+ */
+function replaceHoldings(list) {
+  const rows = asArray(list)
+  commit({ holdings: rows })
+  return rows
 }
 
 function updateAdded(id, patch) {
@@ -273,10 +394,38 @@ function patchBuiltin(id, patch) {
 }
 
 function removeHolding(id) {
-  const list = allRaw()
+  const list = allRows()
   if (!list.filter((h) => h.id === id).length) return false
   commit({ holdings: list.filter((h) => h.id !== id) })
   return true
+}
+
+/**
+ * 删除账户时连它的持仓与流水一起清掉，
+ * 否则会留下一批「没有账户认领」的持仓，再也点不到。
+ */
+function removeAccountHoldings(id) {
+  const s = ensureState()
+  const all = asArray(s.holdings)
+  const ids = {}
+  let n = 0
+
+  all.forEach((h) => {
+    if (String((h && h.accountId) || '') === String(id)) {
+      ids[h.id] = true
+      n++
+    }
+  })
+  if (!n) return 0
+
+  const src = asObject(s.records)
+  const records = {}
+  Object.keys(src).forEach((k) => {
+    if (!ids[k]) records[k] = src[k]
+  })
+
+  commit({ holdings: all.filter((h) => !ids[h.id]), records })
+  return n
 }
 
 // 兼容旧导出：用户自己添加的持仓（改造前与内置持仓分开存）
@@ -372,9 +521,11 @@ function pushToCloud() {
  *   本地有未推送的改动 → 以本地为准推上去
  *   否则              → 以云端为准拉下来覆盖本地
  *
+ * force = true 时忽略本地 dirty，一律以云端为准（关联账号之后用，见 adoptFromCloud）。
+ *
  * 返回「本地是否被云端覆盖」，调用方据此决定要不要让当前页面重新取数。
  */
-function pullFromCloud() {
+function pullFromCloud(force) {
   if (!cloud.enabled()) return Promise.resolve(false)
 
   const local = ensureState()
@@ -383,7 +534,12 @@ function pullFromCloud() {
     .getState()
     .then((res) => {
       const remote = res && res.payload
-      if (!remote || local.dirty) return pushToCloud().then(() => false)
+
+      // 云端还没有这份数据：推本地上去是唯一选择（force 也一样，
+      // 否则一份空快照会把本地的东西也一起抹掉）
+      if (!remote) return pushToCloud().then(() => false)
+      if (local.dirty && !force) return pushToCloud().then(() => false)
+
       adopt(remote)
       return true
     })
@@ -392,6 +548,19 @@ function pullFromCloud() {
       console.warn('[store] 拉取失败，按纯本地运行', e && e.msg)
       return false
     })
+}
+
+/**
+ * 强制以云端为准拉一次（关联 App 账号之后用）。
+ *
+ * 与 pullFromCloud 的区别是**不看本地 dirty**。账号合并完成后，云端那份是
+ * 「两份数据并起来」的结果，本地任何未推送的改动在这个场景下都得让位 ——
+ * 否则紧接着的一次 push 会把合并结果整个盖掉，表现就是
+ * 「App 那边显示已关联，小程序这边的持仓却一点没变」。
+ * 合并读的就是云端那两份快照，所以这里也不需要再推一次本地。
+ */
+function adoptFromCloud() {
+  return pullFromCloud(true)
 }
 
 function adopt(remote) {
@@ -403,7 +572,11 @@ function adopt(remote) {
     rev: remote.rev || 0,
     syncedAt: Date.now()
   }
+  // 云端的设置里带着 activeAccountId，重新按它读一次
+  accountId = null
   applySettings(state.settings)
+  // 云端下来的老持仓可能也没有 accountId，一并归到第一个账户
+  migrateAccountId()
   persist()
   return state
 }
@@ -415,6 +588,7 @@ function adopt(remote) {
 function destroyUserData() {
   cancelPushTimer()
   state = null
+  accountId = null
 
   return cloud
     .clearState()
@@ -430,6 +604,7 @@ module.exports = {
   decorate,
   allHoldings,
   allRaw,
+  allRows,
   getRaw,
   getHolding,
   summary,
@@ -438,11 +613,19 @@ module.exports = {
   updateAdded,
   patchBuiltin,
   removeHolding,
+  replaceHoldings,
+  // 汇率注入：api 层把「实时汇率 ÷ 记账汇率」的系数交给这里
+  setFxProvider,
+  // 多账户
+  currentAccountId,
+  setAccountId,
+  removeAccountHoldings,
   // 交易 / 分红记录
   readRecords,
   writeRecords,
   // 云端同步
   pullFromCloud,
+  adoptFromCloud,
   pushToCloud,
   destroyUserData
 }

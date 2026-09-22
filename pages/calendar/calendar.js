@@ -83,7 +83,10 @@ Page({
   },
 
   /* ================= 日历 ================= */
+  // 连点翻月时会有多个请求同时在飞，只认最后一次，
+  // 否则先发的请求后返回，会把上个月的格子盖到当前月（事件就跑错日期了）
   load() {
+    const seq = (this.calSeq = (this.calSeq || 0) + 1)
     return api
       .getCalendar({
         year: this.data.year,
@@ -92,6 +95,7 @@ Page({
         selectedKey: this.data.selectedKey
       })
       .then((res) => {
+        if (seq !== this.calSeq) return false
         const d = res.data
         this.events = d.events
         this.setData({
@@ -105,8 +109,12 @@ Page({
           noticeNextKey: d.notice.nextKey
         })
         this.loadDay(this.data.selectedKey)
+        return true
       })
-      .catch(util.onError)
+      .catch((e) => {
+        util.onError(e)
+        return false
+      })
   },
 
   loadDay(key) {
@@ -180,7 +188,9 @@ Page({
       month: Number(parts[1]),
       selectedKey: this.data.todayKey
     })
-    this.load().then(() => wx.showToast({ title: '已回到今天', icon: 'none' }))
+    this.load().then((applied) => {
+      if (applied) wx.showToast({ title: '已回到今天', icon: 'none' })
+    })
   },
 
   /* ================= 年度总览 ================= */
@@ -236,6 +246,11 @@ Page({
   // 「本月暂无待对账分红」：直接跳到下一笔有分红的月份
   goNextPayingMonth() {
     const keys = Object.keys(this.events || {}).sort()
+    if (!keys.length) {
+      wx.showToast({ title: '还没有分红安排，先添加持仓吧', icon: 'none' })
+      return
+    }
+
     const monthEnd = this.data.year + '-' + util.pad(this.data.month) + '-32'
     let next = ''
     for (let i = 0; i < keys.length; i++) {
@@ -246,7 +261,7 @@ Page({
     }
 
     if (!next) {
-      wx.showToast({ title: '暂无更多分红安排', icon: 'none' })
+      wx.showToast({ title: '后面没有更多分红安排', icon: 'none' })
       return
     }
     this.goToKey(next, '已跳到下一笔分红的月份')
@@ -260,6 +275,8 @@ Page({
       month: Number(parts[1]),
       selectedKey: key
     })
-    this.load().then(() => wx.showToast({ title: tip, icon: 'none' }))
+    this.load().then((applied) => {
+      if (applied) wx.showToast({ title: tip, icon: 'none' })
+    })
   }
 })

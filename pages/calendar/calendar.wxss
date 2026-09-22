@@ -47,6 +47,11 @@
   margin-right: 6rpx;
 }
 
+/* 三类分红事件的颜色：登记蓝 / 除权橙 / 派息绿 */
+.lg-dot.blue { background: var(--blue); }
+.lg-dot.orange { background: var(--orange); }
+.lg-dot.green { background: var(--primary); }
+
 .blue { background: var(--blue); }
 .orange { background: var(--orange); }
 .green { background: var(--primary); }
@@ -131,6 +136,11 @@
   height: 8rpx;
   border-radius: 50%;
 }
+
+/* 与图例同一套：登记蓝 / 除权橙 / 派息绿 */
+.day-dot.blue { background: var(--blue); }
+.day-dot.orange { background: var(--orange); }
+.day-dot.green { background: var(--primary); }
 
 .day-inner.selected .day-dot { background: #fff !important; }
 

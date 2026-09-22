@@ -48,13 +48,13 @@
       <input
         class="field flex1"
         type="digit"
-        placeholder="请输入价格（{{holding.currencyName}}）"
+        placeholder="请输入价格（{{holding.nativeCurrencyName}}）"
         placeholder-class="ph"
         value="{{price}}"
         data-field="price"
         bindinput="onInput"
       />
-      <text class="unit">{{holding.currencyName}}/股</text>
+      <text class="unit">{{holding.nativeCurrencyName}}/股</text>
     </view>
 
     <!-- 交易费用 -->

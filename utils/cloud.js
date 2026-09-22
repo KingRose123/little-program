@@ -128,6 +128,26 @@ function getOrderStatus(outTradeNo) {
   return request('/api/membership/vpay/order?outTradeNo=' + encodeURIComponent(outTradeNo), 'GET')
 }
 
+/**
+ * 账号关联：小程序这边生成配对码。
+ * 小程序的身份是云托管注入的 openid，App 那边是用户名密码，本来是两套账号。
+ * 这里生成一个 6 位一次性码，交给 App 输入，服务端就会把两边并成一个 ——
+ * 不需要短信，也就没有短信费用。
+ */
+function createLinkCode() {
+  return request('/api/auth/link/code', 'POST', {})
+}
+
+/**
+ * 关联状态：问服务端「我这个账号关联过 App 那边没有」。
+ *
+ * 为什么不能只看本机的记号：记号存在 storage 里，卸载重装 / 换手机就没了，
+ * 而「账号已关联」是服务端上的事实。两端显示与同步时机都以这个为准。
+ */
+function linkStatus() {
+  return request('/api/auth/link/status', 'GET')
+}
+
 module.exports = {
   init,
   enabled,
@@ -135,6 +155,8 @@ module.exports = {
   getState,
   saveState,
   clearState,
+  createLinkCode,
+  linkStatus,
   phoneLogin,
   getMembership,
   redeemMembership,

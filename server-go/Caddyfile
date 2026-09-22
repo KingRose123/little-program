@@ -1,0 +1,36 @@
+# Caddy 反向代理配置。
+#
+# 它比 Nginx 省事的地方就一条：写好域名，证书自动申请、自动续期，
+# 不需要再跑 certbot、不需要写定时任务。
+#
+# 把 api.example.com 换成你自己的域名（换成 IP 也可以，但那样没有证书），
+# 然后 docker compose up -d，几十秒后 https 就能用了。
+
+api.example.com {
+	# 压缩：用户快照是几 MB 的 JSON，压缩比很高
+	encode zstd gzip
+
+	# 反代到容器里的 api 服务。
+	# 8080 是 api 容器内的端口，Caddy 与它在同一个 compose 网络里，
+	# 所以这里不用管宿主机的端口映射。
+	reverse_proxy api:8080
+
+	# 请求体上限：比后端的 5MB 快照上限多留两兆余量，
+	# 让「刚超限」的请求能被后端拿到并回一个明确的 413，
+	# 而不是在这里就被拦成 413 且没有可读的说明。
+	request_body {
+		max_size 7MB
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 20mb
+			roll_keep 5
+		}
+	}
+}
+
+# 想同时保留 IP 直连（比如调试）：
+# :80 {
+# 	reverse_proxy api:8080
+# }

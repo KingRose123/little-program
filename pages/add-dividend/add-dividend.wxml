@@ -41,13 +41,13 @@
       <input
         class="u-field flex1"
         type="digit"
-        placeholder="每股派息金额（{{holding.currencyName}}）"
+        placeholder="每股派息金额（{{holding.nativeCurrencyName}}）"
         placeholder-class="ph"
         value="{{dps}}"
         data-field="dps"
         bindinput="onInput"
       />
-      <text class="unit">{{holding.currencyName}}/股</text>
+      <text class="unit">{{holding.nativeCurrencyName}}/股</text>
     </view>
 
     <!-- 红利税（选填）：暖色底，强调「不填即视为未扣税」 -->
@@ -80,7 +80,7 @@
         data-field="amount"
         bindinput="onAmount"
       />
-      <text class="unit">{{holding.currencyName}}</text>
+      <text class="unit">{{holding.nativeCurrencyName}}</text>
     </view>
     <view class="hint">= 数量 × 每股派息 - 红利税</view>
 

@@ -7,11 +7,31 @@
         "type": "folder"
       },
       {
+        "value": "app",
+        "type": "folder"
+      },
+      {
+        "value": "server",
+        "type": "folder"
+      },
+      {
+        "value": ".apk",
+        "type": "suffix"
+      },
+      {
         "value": ".codebuddy",
         "type": "folder"
       },
       {
+        "value": ".git",
+        "type": "folder"
+      },
+      {
         "value": ".md",
+        "type": "suffix"
+      },
+      {
+        "value": ".log",
         "type": "suffix"
       }
     ],

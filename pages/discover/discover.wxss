@@ -12,7 +12,16 @@
   box-shadow: 0 4rpx 16rpx rgba(23, 43, 35, 0.05);
 }
 
-.search-icon { font-size: 26rpx; }
+/* 用 flex 把 emoji 撑成和字号等高的行盒，否则它的基线比汉字低，跟右边文字不在一条线上 */
+.search-icon {
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  line-height: 1;
+  /* 锁完行高后 emoji 整体偏上，压下来 2rpx 与右侧文字齐平 */
+  transform: translateY(2rpx);
+  flex-shrink: 0;
+}
 
 .search-ph {
   margin-left: 14rpx;

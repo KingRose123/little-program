@@ -1,0 +1,50 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+  <uses-permission android:name="android.permission.VIBRATE"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.VIEW"/>
+      <category android:name="android.intent.category.BROWSABLE"/>
+      <data android:scheme="https"/>
+    </intent>
+  </queries>
+  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:usesCleartextTraffic="true">
+    <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
+    <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
+    <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
+    <!--
+      MainActivity 本身**不再**声明 MAIN/LAUNCHER。
+      启动入口交给下面两个 activity-alias，由它们各自提供一套图标；
+      桌面图标切换就是靠「启用一个、禁用另一个」实现的
+      （PackageManager.setComponentEnabledSetting，见 AppIconModule.kt）。
+
+      如果这里保留 LAUNCHER，桌面上会同时出现三个图标 —— 两个 alias 加
+      MainActivity 自己。这一点很容易漏，症状是「装完发现图标多了一个」。
+    -->
+    <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait" />
+
+    <!--
+      普通会员：金底白猪。
+      android:enabled="true" —— 默认启用它而不是 Pro，因为**全新安装的用户
+      一定是普通会员**（会员档位只存在服务端，装机时无从得知）。这样首屏
+      不会闪出一个"假的 VIP 图标"，等 Launcher 同步完档位再按需切换。
+    -->
+    <activity-alias android:name=".IconFree" android:enabled="true" android:exported="true" android:icon="@mipmap/ic_launcher_free" android:roundIcon="@mipmap/ic_launcher_free" android:label="@string/app_name" android:targetActivity=".MainActivity">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+    </activity-alias>
+
+    <!-- Pro 会员：深色金猪。默认禁用，由 App 在同步到 pro 档位后启用。 -->
+    <activity-alias android:name=".IconPro" android:enabled="false" android:exported="true" android:icon="@mipmap/ic_launcher_pro" android:roundIcon="@mipmap/ic_launcher_pro" android:label="@string/app_name" android:targetActivity=".MainActivity">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+    </activity-alias>
+  </application>
+</manifest>

@@ -1,0 +1,25 @@
+# 构建上下文瘦身：dist 有 15MB，而镜像里是重新编译的，传进去纯属浪费。
+# go build 的缓存也靠不到它 —— 上下文越小，docker build 越快。
+dist/
+*.exe
+*.test
+*.out
+
+# 本地配置：密钥通过 env_file / 运行时环境变量注入，不打进镜像。
+# 打进去的话，拿到镜像的人就能直接读到数据库密码。
+.env
+.env.local
+*.local
+
+# 文档与版本控制元数据，镜像里用不到
+README.md
+.git/
+.gitignore
+.dockerignore
+
+# 编辑器与系统
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log

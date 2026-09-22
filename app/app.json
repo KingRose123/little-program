@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "收息佬",
+    "slug": "xiji",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#FFFFFF",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "package": "com.xiji.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": ["INTERNET"]
+    },
+    "ios": {
+      "bundleIdentifier": "com.xiji.app",
+      "supportsTablet": true
+    }
+  }
+}

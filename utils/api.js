@@ -127,11 +127,9 @@ function capToCny(q, market) {
   if (!q) return 0
   const cap = q.floatCap || q.marketCap || 0
   if (!cap) return 0
-  if (market === 'HK') {
-    const hkd = nativeCurrency('HK')
-    return hkd && hkd.rate ? cap / hkd.rate : cap
-  }
-  return cap
+  // 港股给的是港元、美股给的是美元，A股 / ETF 本身就是人民币 —— 统一走折算，
+  // 原先只处理了港股，美股的市值被当成人民币，权重会小到几乎看不见
+  return cap * cnyPerUnit(market)
 }
 
 /**
@@ -182,7 +180,15 @@ function buildLiveList(codes) {
  * 这样「我的 → 显示货币」改一次，全 App 的金额同步换汇，页面无需各自处理。
  */
 function conv(n) {
-  return (Number(n) || 0) * readCurrency().rate
+  const v = Number(n) || 0
+  const cur = readCurrency()
+  // 人民币不用换算
+  if (cur.code === 'CNY') return v
+  // 显示货币之间也走**实时汇率**：记账 rate 的口径是「1 元 = rate 个该币种」，
+  // 而实时那边拿到的是「1 单位外币 = 多少人民币」，取倒数即可。
+  // 拿不到实时汇率时才退回记账 rate（此时至少口径自洽，不会忽大忽小）。
+  const live = fxLive && Number(fxLive[cur.code])
+  return live > 0 ? v / live : v * cur.rate
 }
 
 function curSymbol() {
@@ -232,10 +238,180 @@ function marketOf(m) {
   return MARKET[m] || MARKET.US
 }
 
-// 各市场的本币：港股按港币、美股按美元、A股按人民币
+// 各市场的本币：港股按港币、美股按美元、A股按人民币。
+// 股票的价格与每股股息天然是「本币」计价（行情接口给的就是本币），
+// 而资产类金额统一按人民币存储 —— 两者的折算全部走下面这组函数，
+// 不要在页面上临时乘汇率。
 function nativeCurrency(market) {
   const code = market === 'HK' ? 'HKD' : market === 'US' ? 'USD' : 'CNY'
   return mock.currencyOptions.filter((c) => c.code === code)[0] || mock.currencyOptions[0]
+}
+
+// 1 单位本币 = 多少人民币。currencyOptions 的 rate 是「1 元 = rate 个该币种」，
+// 所以取倒数：港币 ≈ 0.926 元、美元 ≈ 7.25 元。
+function cnyPerUnit(market) {
+  const c = nativeCurrency(market)
+  return c && c.rate ? 1 / c.rate : 1
+}
+
+// 本币金额 -> 人民币（录入时统一折成人民币存）
+function toCny(v, market) {
+  return (Number(v) || 0) * cnyPerUnit(market)
+}
+
+// 人民币 -> 本币金额（按本币展示、编辑面板回显时用）
+function fromCny(v, market) {
+  const r = cnyPerUnit(market)
+  return r ? (Number(v) || 0) / r : Number(v) || 0
+}
+
+// 本币符号与名称：港币 HK$、美元 $、人民币 ¥
+function nativeSymbol(market) {
+  return nativeCurrency(market).symbol
+}
+
+function nativeName(market) {
+  return nativeCurrency(market).name
+}
+
+/**
+ * 标的自身的报价文案（最新价、每股股息、每股成本）—— 一律按**本币**展示。
+ *
+ * 这些数字是「这只股票在它自己市场里的价格」：换成别的币种会和行情软件、
+ * 券商 App 对不上，用户也没法照着填。所以这里刻意不走 conv()，
+ * 只把存下来的人民币折回本币再加本币符号。
+ * 资产类金额（市值 / 分红总额 / 净投入）仍然走 moneyText，按显示货币来。
+ */
+function nativeFixedText(cny, market, d) {
+  return nativeSymbol(market) + util.money(fromCny(cny, market), d)
+}
+
+/**
+ * 行情接口原样返回的价格（本来就是本币）直接加本币符号。
+ * 与 nativeFixedText 的区别：那个收的是**已折算成人民币**的存储值，
+ * 这个收的是接口原值，别再折一次 —— 折两次等于把汇率平方了。
+ */
+function nativeRawText(v, market, d) {
+  return nativeSymbol(market) + util.money(Number(v) || 0, d)
+}
+
+/* ---------------- 实时汇率 ----------------
+ * 快照里的本币金额是按「记账汇率」折成人民币存的 —— 也就是 mock.currencyOptions
+ * 里那两个常量（HKD 1.08 / USD 0.1379），发版后就固定不动。它是
+ * 「存储值 ⇄ 本币值」的固定桥梁：一旦改它，港币价格显示会跟着漂
+ * （存的是按旧汇率折出来的数，用新汇率还原就对不上了）。
+ *
+ * 所以汇率更新**不动它**，只在外面乘一个重估系数：
+ *   重估系数 = 实时汇率 ÷ 记账汇率
+ * 市值、预测年分红这类「当下与未来的价值」乘上它 → 按最新汇率看；
+ * 历史投入（成本）和实际到账（已收分红）不乘 → 它们本来就是当时的人民币。
+ * 息率是同一币种相除，系数约掉，天然不受汇率影响。
+ */
+const FX_KEY = 'fxRates'
+
+// 内存里那份实时汇率：启动时从 storage 恢复，联网后再刷新
+let fxLive = null
+
+// 1 单位本币 = 多少人民币（实时）；拿不到时返回 null，由调用方退回记账汇率
+function liveCnyPerUnit(market) {
+  const code = market === 'HK' ? 'HKD' : market === 'US' ? 'USD' : 'CNY'
+  if (code === 'CNY') return 1
+  const v = fxLive && Number(fxLive[code])
+  return v > 0 ? v : null
+}
+
+function fxFactor(market) {
+  const live = liveCnyPerUnit(market)
+  if (!live) return 1
+  const book = cnyPerUnit(market)
+  return book ? live / book : 1
+}
+
+// 拉一次实时汇率；失败保持现状（继续用上次的缓存或记账汇率）
+function refreshFx() {
+  return quote
+    .fetchFx()
+    .then((rates) => {
+      fxLive = rates
+      wx.setStorageSync(FX_KEY, { at: Date.now(), rates: rates })
+      return rates
+    })
+    .catch(() => null)
+}
+
+function restoreFx() {
+  const saved = wx.getStorageSync(FX_KEY)
+  if (saved && saved.rates) fxLive = saved.rates
+  return fxLive
+}
+
+// store 是纯计算层，不该反过来依赖 api，所以把汇率以注入的方式给它
+if (typeof store.setFxProvider === 'function') store.setFxProvider(fxFactor)
+
+/**
+ * 老数据口径修正：把港股 / 美股持仓里按**本币**存的字段折成人民币。
+ *
+ * 改造前录入侧没区分币种：行情与分红接口给的是本币（港股港元、美股美元），
+ * 系统却当人民币直接用。显示货币选人民币时，港股市值会差 7% 左右、
+ * 美股会差 7 倍多；成本息率也因为「分子是港币、分母是人民币」而失真。
+ * 现在统一「本币录入 -> 折人民币存储」，已有持仓要把接口来的本币字段折回来。
+ *
+ * cost 与 received **不动**：它们当初是用户按界面提示的人民币填的，语义本就是人民币。
+ * 但迁移后建议核对一下这几只的成本 —— 若当时是照着行情软件的本币价格填的，
+ * 需要按本币重新填一次。
+ *
+ * 版本标记存在 storage 且纳入 SETTING_KEYS（跟着账号上云）：
+ * 只放本地的话，App 与小程序会各折一次，等于把汇率平方。
+ *
+ * v2 修的是 v1 折过头的两处（它们本来就不是本币）：
+ *   1) 自定义标的没有行情源，price 是拿成本推出来的，语义随成本，是人民币；
+ *   2) 分红口径选「自定义」时，dps 是用户照界面提示手填的，也是人民币。
+ * 这两类按 v1 的结果继续用，股价息率会整整差一个汇率。
+ */
+const NATIVE_FIX_KEY = 'nativeCurrencyFix'
+const NATIVE_FIX_VERSION = 2
+
+function migrateNativeCurrency() {
+  const done = Number(wx.getStorageSync(NATIVE_FIX_KEY)) || 0
+  if (done >= NATIVE_FIX_VERSION) return 0
+
+  let n = 0
+  const next = store.allRows().map((h) => {
+    const market = (h && h.market) || 'A'
+    const cny = cnyPerUnit(market)
+    // A股 / ETF / 场外基金的本币就是人民币，折算是恒等，跳过
+    if (cny === 1) return h
+
+    // 没有行情时 price 是「按录入成本估算」来的，和成本同币种（人民币）
+    const noQuote = h.priceDate === '按录入成本估算'
+    // 分红口径「自定义」时 dps 是用户手填的，按界面提示是人民币
+    const customDiv = h.divMode === '自定义'
+
+    let price = h.price
+    let dps = h.dps
+    let baseDps = h.baseDps
+
+    if (done < 1) {
+      // 从没折算过：只折真正来自接口的本币字段，另外两类保持原样
+      if (!noQuote) price = (Number(h.price) || 0) * cny
+      if (!customDiv) dps = (Number(h.dps) || 0) * cny
+      baseDps = (Number(h.baseDps) || 0) * cny
+    } else {
+      // 跑过 v1（它把上面两类也一起折了）：把折过头的还原回人民币
+      if (noQuote) price = (Number(h.price) || 0) / cny
+      if (customDiv) dps = (Number(h.dps) || 0) / cny
+    }
+
+    n++
+    return Object.assign({}, h, { price: price, dps: dps, baseDps: baseDps })
+  })
+
+  // 先落标记再提交：即便这次上云失败，dirty 还留着，下次启动会重试推上去
+  wx.setStorageSync(NATIVE_FIX_KEY, NATIVE_FIX_VERSION)
+  // 一条持仓都没有时也要写标记，否则每次启动都会白跑一遍
+  if (n) store.replaceHoldings(next)
+
+  return n
 }
 
 // 单只持仓 -> 视图模型
@@ -258,17 +434,23 @@ function holdingVM(h) {
     // 录入侧字段：编辑面板要回显
     buyDate: d.buyDate || '',
     fee: d.fee || 0,
+    // 编辑面板按本币回显（手续费当初也是按本币录的）
+    feeNative: fromCny(d.fee || 0, d.market),
     costMode: d.costMode || '',
     divMode: d.divMode || '',
     negativeCost: !!d.negativeCost,
     custom: !!d.custom,
+    // 每股股息、最新价、每股成本都是「这只股票自己的价格」，一律按本币展示
+    // （和数据来源、券商对账单一致，用户也照着它填）；资产类金额才走显示货币
     dps: d.dps,
-    dpsText: fixedText(d.dps, 4),
+    dpsText: nativeFixedText(d.dps, d.market, 4),
     price: d.price,
-    priceText: fixedText(d.price, 2),
+    priceText: nativeFixedText(d.price, d.market, 2),
     priceDateText: d.priceDate,
     cost: d.cost,
-    costText: fixedText(d.cost, 4),
+    // 编辑面板按本币回显：用户当初按本币填，再打开就该看到本币
+    costNative: fromCny(d.cost, d.market),
+    costText: nativeFixedText(d.cost, d.market, 4),
     dividend: d.dividend,
     dividendText: moneyText(d.dividend, 2),
     marketValue: d.marketValue,
@@ -869,22 +1051,31 @@ function addHolding(form) {
 
   const inPool = findStock(code)
 
-  // 分红口径基数优先用接口取到的真实派息，其次退回标的池记录
-  const baseDps = Number(form.baseDps) > 0 ? Number(form.baseDps) : inPool ? inPool.dps : 0
+  /**
+   * 录入侧的钱一律是**本币**（港股按港币填、美股按美元填），
+   * 而快照统一按人民币存 —— 所以先折一道，后面的市值、息率、回本
+   * 就全在同一个币种里算，不会再出现「股息是港币、成本是人民币」
+   * 这种单位打架把息率算歪的情况。
+   */
+  const cny = cnyPerUnit(market)
+
+  // 分红口径基数优先用接口取到的真实派息，其次退回标的池记录。两者都是本币
+  const rawBaseDps = Number(form.baseDps) > 0 ? Number(form.baseDps) : inPool ? inPool.dps : 0
+  const baseDps = rawBaseDps * cny
   const idx = Math.max(0, DIV_MODES.indexOf(form.divMode))
   const custom = Number(form.customDividend)
   // 分红税率逐只可配；关掉「预测分红扣税」就按 0% 算
   const taxRate = taxRateFromForm(form, market)
   const taxOn = form.taxOn !== false
-  // 持仓统一存税后口径；自定义口径是用户自己填的税后金额，直接用
+  // 持仓统一存税后口径；自定义口径是用户自己填的税后本币金额，同样要折算
   const dps =
-    idx === 3 && custom > 0
+    (idx === 3 && custom > 0
       ? custom
-      : Number((netDpsOf(baseDps, taxOn ? taxRate : 0) * DIV_FACTORS[idx]).toFixed(6))
+      : Number((netDpsOf(rawBaseDps, taxOn ? taxRate : 0) * DIV_FACTORS[idx]).toFixed(6))) * cny
 
-  const cost = Number(form.cost) || 0
-  // 现价优先用页面取回的实时行情，拿不到时才退回录入成本
-  const livePrice = Number(form.price) > 0 ? Number(form.price) : 0
+  const cost = (Number(form.cost) || 0) * cny
+  // 现价优先用页面取回的实时行情（本币），拿不到时才退回录入成本
+  const livePrice = (Number(form.price) > 0 ? Number(form.price) : 0) * cny
   const price = livePrice > 0 ? livePrice : Math.abs(cost)
 
   const record = {
@@ -895,7 +1086,7 @@ function addHolding(form) {
     marketLabel: MARKET_LONG_LABEL[market] || market,
     shares: shares,
     dps: dps,
-    // 记一份真实派息基数，之后改分红口径时不必再请求接口
+    // 记一份真实派息基数（已折人民币），之后改分红口径时不必再请求接口
     baseDps: baseDps,
     price: price,
     priceDate: form.priceDate || (livePrice > 0 ? '实时行情' : '按录入成本估算'),
@@ -906,11 +1097,13 @@ function addHolding(form) {
     received: 0,
     // 以下为录入侧信息，持仓详情页/编辑时可回显
     buyDate: form.buyDate || '',
-    fee: Number(form.fee) || 0,
+    fee: (Number(form.fee) || 0) * cny,
     costMode: form.costMode || '',
     divMode: form.divMode || '',
     negativeCost: !!form.negativeCost,
-    custom: true
+    custom: true,
+    // 归到当前账户名下：切到别的账户就看不到它
+    accountId: readActiveAccountId()
   }
 
   store.appendHolding(record)
@@ -1000,9 +1193,12 @@ function holdingDpsPatch(h, dividend) {
   const info = annualDpsOf(dividend)
   if (!(info.dps > 0)) return null
 
+  // 接口给的派息是**本币**，而快照统一存人民币
+  const cny = cnyPerUnit(h.market)
+
   return {
-    baseDps: info.dps,
-    dps: Number((netDpsOf(info.dps, effectiveTaxRate(h)) * DIV_FACTORS[idx]).toFixed(6))
+    baseDps: info.dps * cny,
+    dps: Number((netDpsOf(info.dps, effectiveTaxRate(h)) * DIV_FACTORS[idx]).toFixed(6)) * cny
   }
 }
 
@@ -1055,17 +1251,19 @@ function quoteVM(q, market) {
 
   return {
     price: q.price,
-    priceText: fixedText(q.price, digits),
-    prevCloseText: fixedText(q.prevClose, digits),
+    // 价格与涨跌额是这只股票的本币报价（港股 HK$、美股 $）：按显示货币换算
+    // 反而和行情软件对不上。涨跌幅 / 振幅是比例，不受币种影响，照旧
+    priceText: nativeRawText(q.price, market, digits),
+    prevCloseText: nativeRawText(q.prevClose, market, digits),
     change: q.change,
-    changeText: sign(q.change) + fixedText(Math.abs(q.change), digits),
+    changeText: sign(q.change) + nativeRawText(Math.abs(q.change), market, digits),
     changeRate: q.changeRate,
     changeRateText: sign(q.changeRate) + util.money(Math.abs(q.changeRate), 2) + '%',
     trend,
     trendText: trend === 'up' ? '涨' : trend === 'down' ? '跌' : '平',
-    openText: q.open ? fixedText(q.open, digits) : '--',
-    highText: q.high ? fixedText(q.high, digits) : '--',
-    lowText: q.low ? fixedText(q.low, digits) : '--',
+    openText: q.open ? nativeRawText(q.open, market, digits) : '--',
+    highText: q.high ? nativeRawText(q.high, market, digits) : '--',
+    lowText: q.low ? nativeRawText(q.low, market, digits) : '--',
     amplitudeText: q.amplitude ? util.money(q.amplitude, 2) + '%' : '--',
     turnoverText: q.turnoverRate ? util.money(q.turnoverRate, 2) + '%' : '--',
     peText: q.pe ? util.money(q.pe, 2) : '--',
@@ -1094,7 +1292,7 @@ function dividendDateLine(r) {
  * list 为空数组表示接口查到了、但这只标的确实没有分红记录。
  * dps 是真实派息口径：最近一个完整财年的派息合计（见 annualDpsOf）。
  */
-function dividendArchiveVM(dividend, price) {
+function dividendArchiveVM(dividend, price, market) {
   if (!dividend) {
     return {
       available: false,
@@ -1124,7 +1322,8 @@ function dividendArchiveVM(dividend, price) {
       periodText: r.period || '—',
       planText: r.planText || '—',
       dps: r.dps,
-      dpsText: fixedText(r.dps, 4),
+      // 派息方案是这只股票的本币金额（接口原值），按本币展示
+      dpsText: nativeRawText(r.dps, market, 4),
       exDate: r.exDate || '—',
       dateText: dividendDateLine(r),
       progress: r.progress || '',
@@ -1144,8 +1343,8 @@ function dividendArchiveVM(dividend, price) {
     source: dividend.source || '',
     basisText: annual.year ? annual.year + ' 年度派息合计' : list.length ? '最近一期派息' : '',
     dps,
-    dpsText: fixedText(dps, 4),
-    totalDpsText: fixedText(list.reduce((s, r) => s + r.dps, 0), 4),
+    dpsText: nativeRawText(dps, market, 4),
+    totalDpsText: nativeRawText(list.reduce((s, r) => s + r.dps, 0), market, 4),
     emptyText: '暂无分红记录'
   }
 }
@@ -1172,7 +1371,7 @@ function stockDetailVM(stock, q, dividend) {
   const mi = marketOf(market)
   const quoteView = quoteVM(q, market)
   const price = quoteView ? quoteView.price : 0
-  const div = dividendArchiveVM(dividend, price)
+  const div = dividendArchiveVM(dividend, price, market)
   // 这里只是「该市场默认税率」，用来在选完股票时先给出一个税后股息率，
   // 下一步用户可以在「分红税率」里逐只调整
   const taxRate = defaultTaxRateOf(market)
@@ -1282,21 +1481,23 @@ function estimateDividend(q) {
   const idx = Number((q && q.divModeIndex) || 0)
   const custom = Number((q && q.customDividend) || 0)
 
-  // 自定义口径直接用用户填的税后金额
-  if (idx === 3) {
-    if (!(custom > 0)) return ok({ dividendText: '--', hasDividend: false })
-    return ok({ dividendText: fixedText(custom, 4), hasDividend: true })
-  }
-
   const inPool = findStock(code)
   const market = (q && q.market) || (inPool ? inPool.market : '') || guessMarket(code)
+
+  // 自定义口径直接用用户填的税后金额。返回的一律是**本币**口径：
+  // 它显示在「年均每股分红」旁边，下面紧跟着的就是按本币填的输入框
+  if (idx === 3) {
+    if (!(custom > 0)) return ok({ dividendText: '--', hasDividend: false })
+    return ok({ dividendText: nativeRawText(custom, market, 4), hasDividend: true })
+  }
+
   const base = Number((q && q.baseDps) || 0) > 0 ? Number(q.baseDps) : inPool ? inPool.dps : 0
   if (!(base > 0)) return ok({ dividendText: '--', hasDividend: false })
 
   // 关掉「预测分红扣税」就等于不扣税
   const rate = q && q.taxOn === false ? 0 : taxRateFromForm(q, market)
   return ok({
-    dividendText: fixedText(netDpsOf(base, rate) * DIV_FACTORS[idx], 4),
+    dividendText: nativeRawText(netDpsOf(base, rate) * DIV_FACTORS[idx], market, 4),
     hasDividend: true
   })
 }
@@ -1544,16 +1745,127 @@ function dayKey(y, m, d) {
   return y + '-' + util.pad(m) + '-' + util.pad(d)
 }
 
+/* ---------------- 日历事件：从用户自己的持仓推导 ----------------
+ * mock.calendarEvents 是空的（没有真实数据源），光靠它日历页会一直是空的：
+ * 日期上的小圆点、「下一笔分红月份」、当日明细全都没东西可显示。
+ * 这里改为从真实持仓推导三类事件：
+ *   股权登记 recordDate / 除权除息 exDate / 派息日 payDate（分红档案）
+ *   加上用户自己记的到账记录（派息日）
+ * 分红档案走网络，所以按标的缓存 10 分钟 —— 切月重绘时才不会每次都打接口。
+ */
+const CAL_FILE_TTL = 10 * 60 * 1000
+const dividendFileCache = {}
+
+function fileCacheKey(h) {
+  return (h.code || '') + '@' + (h.market || '')
+}
+
+function fetchDividendCached(h) {
+  const key = fileCacheKey(h)
+  const hit = dividendFileCache[key]
+  if (hit && Date.now() - hit.at < CAL_FILE_TTL) return Promise.resolve(hit.data)
+  return quote
+    .fetchDividend({ code: h.code, market: h.market })
+    .catch(() => null)
+    .then((d) => {
+      // 取不到（网络抖一下 / 该市场没接口）时只短暂记住，
+      // 否则一次失败就会让日历空上 10 分钟，翻月也一直是空的
+      dividendFileCache[key] = {
+        at: d ? Date.now() : Date.now() - (CAL_FILE_TTL - 30 * 1000),
+        data: d
+      }
+      return d
+    })
+}
+
+// 档案里有些日期是「尚未公布」这类文案，只认 yyyy-MM-dd
+function normDate(v) {
+  const s = String(v || '').slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''
+}
+
+function pushEvent(out, date, ev) {
+  const key = normDate(date)
+  if (!key) return
+  ;(out[key] = out[key] || []).push(ev)
+}
+
+// 一条分红方案 -> 登记 / 除权 / 派息三个日期各落一个事件
+function pushFileEvents(out, h, dividend) {
+  const rate = 1 - effectiveTaxRate(h) / 100
+  const list = (dividend && dividend.list) || []
+  list.forEach((r) => {
+    const amount = (Number(r.dps) || 0) * (Number(h.shares) || 0) * rate
+    const ev = (type) => ({ code: h.code, name: h.name, type: type, amount: amount })
+    pushEvent(out, r.recordDate, ev('股权登记'))
+    pushEvent(out, r.exDate, ev('除权除息'))
+    pushEvent(out, r.payDate, ev('派息日'))
+  })
+}
+
+// 同步版：只用本地已有的数据（到账记录 + 已缓存的档案），切月时零延迟重绘
+function localCalendarEvents() {
+  const out = {}
+  store.allHoldings().forEach((h) => {
+    // 用户自己记的到账记录，按派息日排进日历
+    ;(recordsOf(h.id).dividend || []).forEach((r) => {
+      pushEvent(out, r.date, {
+        code: h.code,
+        name: h.name,
+        type: '派息日',
+        amount: Number(r.amount) || 0
+      })
+    })
+
+    const hit = dividendFileCache[fileCacheKey(h)]
+    if (hit && hit.data) pushFileEvents(out, h, hit.data)
+  })
+  return out
+}
+
+// 异步版：先把每只持仓的分红档案补齐（走缓存或网络），再整体算一遍
+function calendarEventsAsync() {
+  return Promise.all(store.allHoldings().map((h) => fetchDividendCached(h))).then(() =>
+    localCalendarEvents()
+  )
+}
+
+// 待对账 = 已公告但除权日还没到；nextKey 取其中最早的除权日
+function noticeVM() {
+  const today = todayKey()
+  let count = 0
+  let amount = 0
+  let nextKey = ''
+
+  store.allHoldings().forEach((h) => {
+    const hit = dividendFileCache[fileCacheKey(h)]
+    const list = (hit && hit.data && hit.data.list) || []
+    const rate = 1 - effectiveTaxRate(h) / 100
+
+    list.forEach((r) => {
+      const ex = normDate(r.exDate)
+      if (!ex || ex < today) return
+      count++
+      amount += (Number(r.dps) || 0) * (Number(h.shares) || 0) * rate
+      if (!nextKey || ex < nextKey) nextKey = ex
+    })
+  })
+
+  return { count: count, amount: amount, amountText: moneyText(amount, 2), nextKey: nextKey }
+}
+
 /**
  * 纯计算生成某月的日历格子（同步、无 IO）
  * 页面切换月份时先本地重绘，再异步补事件点，避免整页骨架屏闪烁。
  * @param {Object} q { year, month, todayKey, selectedKey }
+ * @param {Object} events 可选，缺省时用本地已有的事件
  */
-function buildMonthCells(q) {
+function buildMonthCells(q, events) {
   const year = Number((q && q.year) || 0) || new Date().getFullYear()
   const month = Number((q && q.month) || 0) || 1
   const todayKey = (q && q.todayKey) || ''
   const selectedKey = (q && q.selectedKey) || todayKey
+  const src = events || localCalendarEvents()
 
   const offset = new Date(year, month - 1, 1).getDay()
   const daysInMonth = new Date(year, month, 0).getDate()
@@ -1570,7 +1882,9 @@ function buildMonthCells(q) {
       day: d,
       outside: false,
       isToday: key === todayKey,
-      selected: key === selectedKey
+      selected: key === selectedKey,
+      // 当天的分红事件：日期格上的小圆点就按它取色
+      events: src[key] || null
     })
   }
   const rest = 42 - cells.length
@@ -1581,43 +1895,28 @@ function buildMonthCells(q) {
   return { title: year + '年' + month + '月', week: WEEK, cells }
 }
 
-// 日历里所有有分红事件的日期（升序）
-function keysOfEvents() {
-  return Object.keys(mock.calendarEvents).sort()
-}
-
-// 取 >= from 的第一个分红日期，没有则退回最后一个
-function nextKeyFrom(keys, from) {
-  for (let i = 0; i < keys.length; i++) {
-    if (keys[i] >= from) return keys[i]
-  }
-  return keys[keys.length - 1] || ''
-}
-
 /**
  * 按月取日历数据（含分红事件）
  * @param {Object} q { year, month, todayKey, selectedKey }
  */
 function getCalendar(q) {
-  const base = buildMonthCells(q)
-  return ok({
-    title: base.title,
-    week: base.week,
-    cells: base.cells,
-    legend: mock.calendarLegend,
-    notice: {
-      count: mock.dividendNotice.count,
-      amountText: moneyText(mock.dividendNotice.amount, 2),
-      // 最早一笔待除权日：预告卡点击后直接跳过去
-      nextKey: nextKeyFrom(keysOfEvents(), todayKey())
-    },
-    events: mock.calendarEvents
+  // 先补齐分红档案（命中缓存就是纯本地计算），再排日历
+  return calendarEventsAsync().then((events) => {
+    const base = buildMonthCells(q, events)
+    return ok({
+      title: base.title,
+      week: base.week,
+      cells: base.cells,
+      legend: mock.calendarLegend,
+      notice: noticeVM(),
+      events
+    })
   })
 }
 
 // 某天的分红事件
 function getDayEvents(key, events) {
-  const src = (events || mock.calendarEvents)[key] || []
+  const src = (events || localCalendarEvents())[key] || []
   return src.map((e) => ({
     code: e.code,
     name: e.name,
@@ -1673,6 +1972,58 @@ function maskPhone(p) {
   return s.length >= 7 ? s.slice(0, 3) + '****' + s.slice(-4) : s
 }
 
+/* ---------------- 关联 App 账号 ----------------
+ * 小程序这边 uid 就是微信 openid，App 那边是用户名密码（uid 形如 u_xxx），
+ * 本来是两套账号、各一半数据。服务端给了「配对码」把两边并成一个：
+ * 这里生成 6 位码，在 App 的「我的 → 关联小程序账号」里输入即可。
+ * 全程不用短信，所以没有短信费用；手机号会留在合并后的账号上（服务端保证）。
+ */
+
+// 本机记号：关联成功后写下，「我的」页据此显示「已关联」。
+// 它同时是「这一次要强制以云端为准拉数据」的开关（见 app.js）——
+// 记号从无到有那一刻，正说明服务端刚把两边并过，本地那份已经是旧的。
+const LINKED_KEY = 'linkedWechat'
+
+function linkedWechat() {
+  return !!wx.getStorageSync(LINKED_KEY)
+}
+
+function rememberLinked() {
+  wx.setStorageSync(LINKED_KEY, true)
+}
+
+/**
+ * 问服务端「这个账号关联了没有」。
+ *
+ * 与上面本机记号的区别：记号跟着这台设备走，卸载重装就没了，
+ * 而关联是账号上的事实。所以显示与同步都以服务端这个答案为准，
+ * 顺带把记号补回来（重装后也能正确显示「已关联」）。
+ * 请求失败时返回 null —— 调用方按「没问到」处理，不能误判成「没关联」。
+ */
+function linkStatus() {
+  // 用 init() 而不是 enabled()：单独进「我的」页时，启动流程可能还没跑到
+  // 这一步（init 幂等，重复调用没有副作用）
+  if (!cloud.init()) return Promise.resolve(null)
+
+  return cloud
+    .linkStatus()
+    .then((res) => {
+      const d = (res && res.data) || {}
+      if (d.linked) rememberLinked()
+      return d
+    })
+    .catch(() => null)
+}
+
+function createLinkCode() {
+  if (!cloud.enabled()) return fail('云托管未启用，无法生成配对码')
+
+  return cloud
+    .createLinkCode()
+    .then((res) => ok(res.data))
+    .catch((e) => fail((e && e.msg) || '生成配对码失败，请重试'))
+}
+
 function getProfile() {
   const src = coverageSource()
   const totalYear = src.reduce((s, i) => s + i.year, 0)
@@ -1701,9 +2052,20 @@ function getProfile() {
         bound: !!phone
       })
     }
+    if (it.key === 'link') {
+      // 关联状态以服务端为准（页面 load 会先问一次再取这里），本机记号只是缓存：
+      // 卸载重装后记号没了，但服务端还记得这个账号已经关联过
+      return Object.assign({}, it, { value: linkedWechat() ? '已关联' : '' })
+    }
     if (it.key === 'account') {
+      // 带上当前账户自己的持仓数：切完账户能立刻看出这是另一套账
+      const mine = active
+        ? store.allRows().filter((h) => String(h.accountId || '') === String(active.id)).length
+        : 0
       return Object.assign({}, it, {
-        value: active ? active.name + '（共 ' + accounts.length + ' 个）' : '未设置'
+        value: active
+          ? active.name + ' · ' + mine + ' 只持仓（共 ' + accounts.length + ' 个）'
+          : '未设置'
       })
     }
     return it
@@ -1970,16 +2332,30 @@ function writeAccounts(list) {
   wx.setStorageSync(ACCOUNT_KEY, list)
 }
 
+// 每个账户顺带给出自己名下的持仓数：删账户时要先说清楚会带走多少
+function accountsWithCount(list) {
+  const all = store.allRows()
+  return list.map((a) =>
+    Object.assign({}, a, {
+      holdingCount: all.filter((h) => String(h.accountId || '') === String(a.id)).length
+    })
+  )
+}
+
 function getAccounts() {
   const list = readAccounts()
-  return ok({ list, activeId: readActiveAccountId(list) })
+  return ok({ list: accountsWithCount(list), activeId: readActiveAccountId(list) })
 }
 
 function switchAccount(id) {
   if (!id) return fail('缺少账户 ID')
   if (!readAccounts().filter((a) => a.id === id).length) return fail('账户不存在')
   wx.setStorageSync('activeAccountId', id)
-  return ok(readAccounts())
+  // 持仓按 accountId 过滤，这里同步给 store，切完立刻按新账户出账
+  store.setAccountId(id)
+  // 换账户了，行情缓存作废，进持仓页时按新账户那几只重刷
+  holdingQuoteAt = 0
+  return ok(accountsWithCount(readAccounts()))
 }
 
 // 新增账户：名称 + 用途说明
@@ -2008,12 +2384,16 @@ function removeAccount(id) {
   const list = readAccounts()
   if (list.length <= 1) return fail('至少保留一个账户')
   const next = list.filter((a) => a.id !== id)
+  // 账户没了，它名下的持仓与流水也一起清掉，不留无主数据
+  store.removeAccountHoldings(id)
   // 删掉的刚好是当前账户时，落到第一个账户
   if (wx.getStorageSync('activeAccountId') === id) {
     wx.setStorageSync('activeAccountId', next[0].id)
+    store.setAccountId(next[0].id)
   }
+  holdingQuoteAt = 0
   writeAccounts(next)
-  return ok(next)
+  return ok(accountsWithCount(next))
 }
 
 /* ================= 我的：文档 / 联系 / 注销 ================= */
@@ -2065,8 +2445,13 @@ function refreshHoldingQuotes(force) {
         const patch = {}
 
         const q = entry && entry.quote
-        if (q && q.price > 0 && q.price !== h.price) {
-          patch.price = q.price
+        // 行情接口给的是**本币**价（港股港元、美股美元），而快照统一存人民币。
+        // 漏掉这一步折算，股价息率就会差一整个汇率 —— 港股偏低 7% 左右、
+        // 美股只剩约 1/7。比较也必须用折算后的值：否则已被写成本币的旧值
+        // 会和行情原值相等，被判成「价格没变」，永远纠正不回来。
+        const livePrice = (Number(q && q.price) || 0) * cnyPerUnit(h.market)
+        if (q && q.price > 0 && livePrice !== h.price) {
+          patch.price = livePrice
           patch.priceDate = '实时行情 ' + (q.priceDate || todayKey())
         }
 
@@ -2551,6 +2936,7 @@ const TRADE_TAG_CLASS = {
 }
 
 function tradeVM(h) {
+  const market = h.market || 'A'
   // 首行用「建仓基准」而不是当前持仓：否则加完交易，这条历史记录会跟着一起变
   const base = seedBaseOf(h)
   const seed = {
@@ -2572,9 +2958,11 @@ function tradeVM(h) {
       type: r.type,
       typeClass: TRADE_TAG_CLASS[r.type] || 'tag-green',
       sharesText: util.group(r.shares, 0) + '股',
-      priceText: fixedText(r.price, 4),
+      // 成交价与手续费是「这只股票的价格」，按本币显示（与行情、券商对账单一致）；
+      // 成交金额是资产类数字，按显示货币走
+      priceText: nativeFixedText(r.price, market, 4),
       amountText: moneyText((Number(r.shares) || 0) * (Number(r.price) || 0), 2),
-      feeText: fixedText(r.fee || 0, 2),
+      feeText: nativeFixedText(r.fee || 0, market, 2),
       seed: !!r.seed
     }))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
@@ -2610,6 +2998,11 @@ function dividendFileVM(h, dividend) {
   const taxRate = effectiveTaxRate(h)
   // 税后到账 = 每股派息 × 股数 × (1 - 税率)
   const rate = 1 - taxRate / 100
+  // 接口给的每股派息是**本币**，乘上股数得到的是本币金额，
+  // 要先折成人民币才能和 h.received（人民币）放在一起加总
+  const cny = cnyPerUnit(h.market)
+  // 汇率重估：这些是「未来能收到多少」，要按最新汇率看
+  const fx = fxFactor(h.market)
   const list = (dividend && dividend.list) || []
 
   let markedCurrent = false
@@ -2628,9 +3021,10 @@ function dividendFileVM(h, dividend) {
       exDate: r.exDate || '—',
       payDate: r.payDate || r.recordDate || '—',
       dateText: dividendDateLine(r),
-      dpsText: fixedText(r.dps, 4),
-      amount: r.dps * h.shares * rate,
-      amountText: moneyText(r.dps * h.shares * rate, 2),
+      // 每股派息按本币显示；到账金额是资产类数字，折成人民币后按显示货币走
+      dpsText: nativeRawText(r.dps, h.market, 4),
+      amount: r.dps * cny * fx * h.shares * rate,
+      amountText: moneyText(r.dps * cny * fx * h.shares * rate, 2),
       pending,
       current
     }
@@ -2639,7 +3033,7 @@ function dividendFileVM(h, dividend) {
   return {
     list: rows,
     totalText: moneyText(rows.reduce((s, r) => s + r.amount, 0), 2),
-    passedText: moneyText(h.received || 0, 2),
+    passedText: moneyText((h.received || 0) * fx, 2),
     source: dividend ? dividend.source : '',
     emptyText: dividend ? '该标的暂无分红记录' : '该市场暂未开放分红档案接口'
   }
@@ -2687,6 +3081,10 @@ function addTradeRecord(id, form) {
     return fail('卖出数量不能超过当前持仓 ' + util.group(Number(h.shares) || 0, 0) + ' 股')
   }
 
+  // 成交价与手续费填的是**本币**，折成人民币后再参与摊薄成本的计算
+  // （持仓里的 cost 是人民币，两边必须同一口径，否则加权会串味）
+  const cny = cnyPerUnit(h.market)
+
   const all = readRecords()
   const cur = all[id] || { trade: [], dividend: [] }
   cur.trade = (cur.trade || []).concat([
@@ -2695,8 +3093,8 @@ function addTradeRecord(id, form) {
       date: f.date || todayKey(),
       type,
       shares,
-      price,
-      fee: Number(f.fee) || 0
+      price: price * cny,
+      fee: (Number(f.fee) || 0) * cny
     }
   ])
   all[id] = cur
@@ -2708,12 +3106,13 @@ function addTradeRecord(id, form) {
   return getHoldingRecords(id)
 }
 
-// 分红记录的展示文案：方案按「每 10 股派 X 元」的惯例写，备注带上股数与扣税
-function dividendRemark(shares, dps, tax) {
-  const plan = dps > 0 ? '每 10 股派 ' + util.money(dps * 10, 2) + ' 元' : ''
+// 分红记录的展示文案：方案按「每 10 股派 X」的惯例写，金额用该标的的**本币**
+// （行情软件、券商对账单都是本币口径）；备注里的扣税金额则按显示货币走。
+function dividendRemark(market, shares, dps, taxCny) {
+  const plan = dps > 0 ? '每 10 股派 ' + nativeSymbol(market) + util.money(dps * 10, 2) : ''
 
   let note = '现金分红'
-  if (tax > 0) note += '（扣税 ' + moneyText(tax, 2) + '）'
+  if (taxCny > 0) note += '（扣税 ' + moneyText(taxCny, 2) + '）'
   else if (shares > 0 && dps > 0) note += '（' + util.group(shares, 0) + ' 股）'
 
   return { note, plan }
@@ -2727,11 +3126,15 @@ function addDividendRecord(id, form) {
   const amount = Number(f.amount)
   if (!(amount > 0)) return fail('请填写正确的到账金额')
 
+  // 到账金额、每股派息、扣税填的都是**本币**（页面按该持仓的本币单位收），
+  // 存进快照前统一折成人民币，和成本、现价保持同一个口径
+  const cny = cnyPerUnit(h.market)
+
   const shares = Number(f.shares) || 0
   const dps = Number(f.dps) || 0
-  const tax = Number(f.tax) || 0
+  const tax = (Number(f.tax) || 0) * cny
   // 明细里只展示金额 + 一行小字，把「每 10 股派多少」和扣税情况拼进这一行
-  const remark = dividendRemark(shares, dps, tax)
+  const remark = dividendRemark(h.market, shares, dps, tax)
 
   const all = readRecords()
   const cur = all[id] || { trade: [], dividend: [] }
@@ -2739,10 +3142,10 @@ function addDividendRecord(id, form) {
     {
       id: 'dv_' + Date.now(),
       date: f.date || todayKey(),
-      amount,
-      // 记下派息三要素，之后能还原这笔分红的算法
+      amount: amount * cny,
+      // 记下派息三要素（已折人民币），之后能还原这笔分红的算法
       shares,
-      dps,
+      dps: dps * cny,
       tax,
       note: String(f.note || '').trim() || remark.note,
       plan: String(f.plan || '').trim() || remark.plan
@@ -2800,7 +3203,8 @@ function updateHolding(id, form) {
   const shares = Number(f.shares)
   if (!(shares > 0)) return fail('请填写正确的持仓数量')
 
-  const cost = Number(f.cost) || 0
+  // 编辑面板填的同样是**本币**，折成人民币后再存，与新增持仓保持一个口径
+  const cost = (Number(f.cost) || 0) * cnyPerUnit(raw.market)
   const buyDate = f.buyDate || raw.buyDate || ''
   // 税率：没传就沿用原值，传了以页面为准；都没值时才退回市场默认
   const taxRate = taxRateFromForm(
@@ -2935,6 +3339,9 @@ module.exports = {
   getContactInfo,
   getLegalDoc,
   destroyAccount,
+  createLinkCode,
+  linkStatus,
+  linkedWechat,
   // 发现：榜单 / 文章 / 搜索 / 工具
   getRank,
   getArticle,
@@ -2951,6 +3358,15 @@ module.exports = {
   fixedText,
   amountText,
   wanText,
+  // 本币（港股港币 / 美股美元）折算与文案：页面提示输入单位时用
+  nativeName,
+  nativeSymbol,
+  cnyPerUnit,
+  fromCny,
+  migrateNativeCurrency,
+  // 实时汇率：启动时恢复缓存 + 联网刷新
+  restoreFx,
+  refreshFx,
   // 持仓详情：交易明细 / 分红记录 / 分红档案
   getHoldingRecords,
   addTradeRecord,

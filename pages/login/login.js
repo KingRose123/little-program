@@ -4,7 +4,9 @@ const util = require('../../utils/util.js')
 
 Page({
   data: {
-    agreed: true,
+    // 默认**不**勾选：审核要求「应当由用户阅读后自行选择是否同意，不得默认强制同意」。
+    // 也不落本地存储 —— 每次进来都得用户自己勾一次，不能替他记住。
+    agreed: false,
     submitting: false
   },
 

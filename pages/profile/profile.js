@@ -1,5 +1,6 @@
 const app = getApp()
 const api = require('../../utils/api.js')
+const store = require('../../utils/store.js')
 const util = require('../../utils/util.js')
 
 // 这五个 key 都跳「说明文档」页，由 doc 页按 key 分流内容
@@ -52,8 +53,11 @@ Page({
   },
 
   load() {
+    // 先问一次服务端的关联状态，再取 profile：本机那个记号会随卸载重装丢掉，
+    // 以服务端为准才能正确显示「已关联」，顺带把记号补回来
     return api
-      .getProfile()
+      .linkStatus()
+      .then(() => api.getProfile())
       .then((res) => {
         this.setData(Object.assign({ loading: false }, res.data))
       })
@@ -108,7 +112,75 @@ Page({
         content: hit.value + '\n\n手机号用于登录与账号找回。',
         showCancel: false
       })
+      return
     }
+
+    if (key === 'link') {
+      this.openLink()
+    }
+  },
+
+  /* ---------------- 关联 App 账号 ---------------- */
+
+  /**
+   * 生成一次性配对码，交给 App 输入即可把两边账号并成一个账号。
+   * 小程序这边本来就是微信身份，不需要再验证手机号，所以全程没有短信费用。
+   * 顺手把码复制到剪贴板，省得用户两个端对着抄。
+   */
+  openLink() {
+    // 已经关联过就别再生成码了：合并是一次性的，再生成的码在 App 那边输进去
+    // 只会得到「这是你自己的账号」—— 不如直接把现状说清楚
+    if (api.linkedWechat()) {
+      wx.showModal({
+        title: '已关联',
+        content: '这个微信账号已经和 App 账号关联过了，两边的持仓、账户与设置共用同一份数据，不用再关联。',
+        showCancel: false
+      })
+      return
+    }
+
+    wx.showLoading({ title: '生成中', mask: true })
+
+    // 生成码之前先把本地推上云：服务端合并的是**云端那两份快照**，
+    // 本地还没推上去的改动不会参与合并，合完反而会被云端盖掉
+    store
+      .pushToCloud()
+      .catch(() => false)
+      .then(() => api.createLinkCode())
+      .then((res) => {
+        wx.hideLoading()
+        const code = (res && res.data && res.data.code) || ''
+        if (!code) {
+          wx.showToast({ title: '生成失败，请重试', icon: 'none' })
+          return
+        }
+
+        wx.setClipboardData({
+          data: code,
+          success: () => {
+            wx.showModal({
+              title: '配对码已复制',
+              content:
+                code +
+                '\n\n打开 App，在「我的 → 关联小程序账号」里粘贴这串码即可（10 分钟内有效）。两边的数据会合并到一起。',
+              showCancel: false
+            })
+          },
+          // 复制失败（用户没给剪贴板权限）也要把码显示出来，否则他抄不到
+          fail: () => {
+            wx.showModal({
+              title: '配对码',
+              content:
+                code + '\n\n请在 App 的「我的 → 关联小程序账号」里输入这串码（10 分钟内有效）。',
+              showCancel: false
+            })
+          }
+        })
+      })
+      .catch((e) => {
+        wx.hideLoading()
+        util.onError(e)
+      })
   },
 
   /* ---------------- 手机号绑定 ---------------- */
@@ -227,9 +299,13 @@ Page({
     const id = e.currentTarget.dataset.id
     const acc = this.data.accounts.filter((a) => a.id === id)[0] || {}
 
+    // 说清楚会带走什么：账户下的持仓是跟着账户一起走的
+    const n = Number(acc.holdingCount) || 0
+    const extra = n ? '，该账户下的 ' + n + ' 只持仓与流水也会一并清除' : ''
+
     wx.showModal({
       title: '删除账户',
-      content: '删除「' + acc.name + '」后不可恢复，确定继续吗？',
+      content: '删除「' + acc.name + '」后不可恢复' + extra + '，确定继续吗？',
       confirmColor: '#E5484D',
       success: (res) => {
         if (!res.confirm) return

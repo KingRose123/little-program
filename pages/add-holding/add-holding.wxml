@@ -181,12 +181,12 @@
       <input
         class="field flex1"
         type="digit"
-        placeholder="可输入正数、零、或者负数（人民币）"
+        placeholder="可输入正数、零、或者负数（{{nativeName}}）"
         placeholder-class="ph"
         value="{{cost}}"
         bindinput="onCost"
       />
-      <text class="unit">人民币/股</text>
+      <text class="unit">{{nativeName}}/股</text>
     </view>
 
     <view class="check-row" bindtap="toggleNegative">
@@ -221,7 +221,7 @@
       wx:if="{{divModeIndex === 3}}"
       class="field full mt24"
       type="digit"
-      placeholder="请输入每股派息（元）"
+      placeholder="请输入每股派息（{{nativeName}}）"
       placeholder-class="ph"
       value="{{customDividend}}"
       bindinput="onCustomDividend"

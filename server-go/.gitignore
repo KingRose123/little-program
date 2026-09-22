@@ -1,0 +1,22 @@
+# 编译产物：体积大且可重现，不进仓库
+/dist/
+*.exe
+*.test
+*.out
+
+# 本地配置：含数据库密码、微信支付密钥等，**绝不能入库**
+# 需要什么变量见 .env.example
+.env
+.env.local
+*.local
+
+# 编辑器与系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 日志与临时目录
+*.log
+/tmp/
